@@ -1,0 +1,5 @@
+建議用new source code，免得工作目錄不一致而c simulation error因為找不到testbench code
+
+
+No Active Solution
+-> Add new solution
