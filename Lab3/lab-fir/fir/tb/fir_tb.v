@@ -26,28 +26,41 @@ module fir_tb
     parameter Tape_Num    = 11,
     parameter Data_Num    = 600
 )();
-    wire                        awready;
-    wire                        wready;
-    reg                         awvalid;
-    reg   [(pADDR_WIDTH-1): 0]  awaddr;
-    reg                         wvalid;
-    reg signed [(pDATA_WIDTH-1) : 0] wdata;
-    wire                        arready;
-    reg                         rready;
-    reg                         arvalid;
-    reg         [(pADDR_WIDTH-1): 0] araddr;
-    wire                        rvalid;
-    wire signed [(pDATA_WIDTH-1): 0] rdata;
-    reg                         ss_tvalid;
-    reg signed [(pDATA_WIDTH-1) : 0] ss_tdata;
-    reg                         ss_tlast;
-    wire                        ss_tready;
-    reg                         sm_tready;
-    wire                        sm_tvalid;
-    wire signed [(pDATA_WIDTH-1) : 0] sm_tdata;
-    wire                        sm_tlast;
+	// Global Signals    
     reg                         axis_clk;
     reg                         axis_rst_n;
+    
+    // Write Address Channel
+    reg   [(pADDR_WIDTH-1): 0]  awaddr;
+	wire                        awready;
+	reg                         awvalid;
+	
+	// Write Data Channel
+	reg signed [(pDATA_WIDTH-1) : 0] wdata;
+	wire                        wready;
+    reg                         wvalid;
+	
+	// Read Address Channel
+    reg         [(pADDR_WIDTH-1): 0] araddr;
+    wire                        arready;
+	reg                         arvalid;
+	
+	// Read Data Channel
+	wire signed [(pDATA_WIDTH-1): 0] rdata;
+    reg                         rready;
+	wire                        rvalid; 
+    
+	// Stream Slave
+    reg signed [(pDATA_WIDTH-1) : 0] ss_tdata;
+    wire                        ss_tready;
+	reg                         ss_tvalid;
+	reg                         ss_tlast;
+	
+	// Stream Master
+	wire signed [(pDATA_WIDTH-1) : 0] sm_tdata;
+    reg                         sm_tready;
+    wire                        sm_tvalid;
+    wire                        sm_tlast;
 
 // ram for tap
     wire [3:0]               tap_WE;
@@ -134,7 +147,7 @@ module fir_tb
         $dumpvars();
     end
 
-
+// Initial Clock
     initial begin
         axis_clk = 0;
         forever begin
@@ -142,12 +155,15 @@ module fir_tb
         end
     end
 
+
+// Initial Reset
     initial begin
         axis_rst_n = 0;
         @(posedge axis_clk); @(posedge axis_clk);
         axis_rst_n = 1;
     end
 
+// Read Data in and Golden (Din_list、golden_list、data_length)
     reg [31:0]  data_length;
     integer Din, golden, input_data, golden_data, m;
     initial begin
@@ -161,6 +177,7 @@ module fir_tb
         end
     end
 
+// Push Din_list from TB to FIR by stream
     integer i;
     initial begin
         $display("------------Start simulation-----------");
@@ -174,6 +191,7 @@ module fir_tb
         $display("------End the data input(AXI-Stream)------");
     end
 
+//  Prepare to get golden_list from FIR to TB by stream
     integer k;
     reg error;
     reg status_error;
@@ -223,6 +241,8 @@ module fir_tb
         coef[10] =  32'd0;
     end
 
+//  Write coefficient from TB to FIR by AXI-lite
+//  Including: data_length、coef[] and ap_start
     reg error_coef;
     initial begin
         error_coef = 0;
@@ -244,19 +264,22 @@ module fir_tb
         $display("----End the coefficient input(AXI-lite)----");
     end
 
+//  Write config register by AXI-lite
     task config_write;
         input [11:0]    addr;
         input [31:0]    data;
         begin
-            awvalid <= 0; wvalid <= 0;
+            awvalid <= 0; wvalid <= 0;   //Non-blocking assignment //the updated values are only available on the next clock cycle
             @(posedge axis_clk);
             awvalid <= 1; awaddr <= addr;
             wvalid  <= 1; wdata <= data;
             @(posedge axis_clk);
-            while (!wready) @(posedge axis_clk);
+            while (!wready) @(posedge axis_clk);  // Leave the loop when write ready 
         end
     endtask
 
+//  Read config register by AXI-lite
+//  If not match the exp_data, set the error_coef to high
     task config_read_check;
         input [11:0]        addr;
         input signed [31:0] exp_data;
@@ -278,7 +301,8 @@ module fir_tb
     endtask
 
 
-
+//  Send 32'b in1 value to slave by stream
+//  Leave while loop when ss_tready is high
     task ss;
         input  signed [31:0] in1;
         begin
@@ -291,6 +315,8 @@ module fir_tb
         end
     endtask
 
+//  Receive 32'b FIR data from slave by stream
+//  If the result does not match golden, set error high
     task sm;
         input  signed [31:0] in2; // golden data
         input         [31:0] pcnt; // pattern count
