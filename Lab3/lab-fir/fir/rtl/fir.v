@@ -44,7 +44,39 @@ module fir
 );
 begin
 
-    // write your code here!
+    // RAM for tap
+    bram11 tap_RAM (
+        .CLK(axis_clk),
+        .WE(tap_WE),
+        .EN(tap_EN),
+        .Di(tap_Di),
+        .A(tap_A),
+        .Do(tap_Do)
+    );
+
+    // RAM for data: choose bram11 or bram12
+    bram11 data_RAM(
+        .CLK(axis_clk),
+        .WE(data_WE),
+        .EN(data_EN),
+        .Di(data_Di),
+        .A(data_A),
+        .Do(data_Do)
+    );
+	
+	// [ap_start]
+	// set by software/ testbench
+	// reset by engine when start data transfer
+
+	// [ap_done]
+	// set when engine complete s last data processing and data is transferred
+	// reset when reset signal is asserted
+	// reset when it is read
+	
+	// [ap_idle]
+	// set when reset
+	// set when FIR engine processes the last data and last data is transferred
+	// reset when ap_start is sampled
 
 
 end
