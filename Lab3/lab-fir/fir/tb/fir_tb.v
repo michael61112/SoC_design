@@ -177,41 +177,28 @@ module fir_tb
         end
     end
 
-// Push Din_list from TB to FIR by stream
+//  -------------------------------------------------------------------------------------------
+
+//  Step 1: Check FIR is idle, if not, wait until FIR is idle
+//  TB push Din_list to FIR by stream
     integer i;
     initial begin
         $display("------------Start simulation-----------");
         ss_tvalid = 0;
-        $display("----Start the data input(AXI-Stream)----");
+		ss_tlast = 0; 
+        
+		while(error_coef) begin
+			config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
+		end
+		
+		$display("----Start the data input(AXI-Stream)----");
         for(i=0;i<(data_length-1);i=i+1) begin
-            ss_tlast = 0; ss(Din_list[i]);
+			ss(Din_list[i]);
         end
-        config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
-        ss_tlast = 1; ss(Din_list[(Data_Num-1)]);
+        ss_tlast = 1;
+		ss(Din_list[(Data_Num-1)]);
+		ss_tvalid = 0;
         $display("------End the data input(AXI-Stream)------");
-    end
-
-//  Prepare to get golden_list from FIR to TB by stream
-    integer k;
-    reg error;
-    reg status_error;
-    initial begin
-        error = 0; status_error = 0;
-        sm_tready = 1;
-        wait (sm_tvalid);
-        for(k=0;k < data_length;k=k+1) begin
-            sm(golden_list[k],k);
-        end
-        config_read_check(12'h00, 32'h02, 32'h0000_0002); // check ap_done = 1 (0x00 [bit 1])
-        config_read_check(12'h00, 32'h04, 32'h0000_0004); // check ap_idle = 1 (0x00 [bit 2])
-        if (error == 0 & error_coef == 0) begin
-            $display("---------------------------------------------");
-            $display("-----------Congratulations! Pass-------------");
-        end
-        else begin
-            $display("--------Simulation Failed---------");
-        end
-        $finish;
     end
 
     // Prevent hang
@@ -241,6 +228,8 @@ module fir_tb
         coef[10] =  32'd0;
     end
 
+//  Step2: Program length, and tap parameters
+//  Step3: Program ap_start -> 1
 //  Write coefficient from TB to FIR by AXI-lite
 //  Including: data_length、coef[] and ap_start
     reg error_coef;
@@ -253,16 +242,45 @@ module fir_tb
         end
         awvalid <= 0; wvalid <= 0;
         // read-back and check
+		$display(" Check Data Length ...");
+		config_read_check(12'h10, data_length, 32'hffffffff);
         $display(" Check Coefficient ...");
         for(k=0; k < Tape_Num; k=k+1) begin
             config_read_check(12'h20+4*k, coef[k], 32'hffffffff);
         end
         arvalid <= 0;
         $display(" Tape programming done ...");
+		
         $display(" Start FIR");
         @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
         $display("----End the coefficient input(AXI-lite)----");
     end
+
+// Step5: When ap_done is sampled, compare Yn with golden data
+//  TB Receive golden_list from FIR by stream
+    integer k;
+    reg error;
+    reg status_error;
+    initial begin
+        error = 0; status_error = 0;
+        sm_tready = 1;
+        wait (sm_tvalid);
+        for(k=0;k < data_length;k=k+1) begin
+            sm(golden_list[k],k);
+        end
+        config_read_check(12'h00, 32'h02, 32'h0000_0002); // check ap_done = 1 (0x00 [bit 1])
+        config_read_check(12'h00, 32'h04, 32'h0000_0004); // check ap_idle = 1 (0x00 [bit 2])
+        if (error == 0 & error_coef == 0) begin
+            $display("---------------------------------------------");
+            $display("-----------Congratulations! Pass-------------");
+        end
+        else begin
+            $display("--------Simulation Failed---------");
+        end
+        $finish;
+    end
+
+//  -------------------------------------------------------------------------------------------
 
 //  Write config register by AXI-lite
     task config_write;
