@@ -4,25 +4,40 @@ module fir
     parameter Tape_Num    = 11
 )
 (
+	// Global Signals 
+	input   wire                     axis_clk,
+    input   wire                     axis_rst_n
+	
+	// Write Address Channel
+	input   wire [(pADDR_WIDTH-1):0] awaddr,
+	input   wire                     awvalid,
     output  wire                     awready,
+	
+	// Write Data Channel
+	input   wire [(pDATA_WIDTH-1):0] wdata,
+	input   wire                     wvalid,
     output  wire                     wready,
-    input   wire                     awvalid,
-    input   wire [(pADDR_WIDTH-1):0] awaddr,
-    input   wire                     wvalid,
-    input   wire [(pDATA_WIDTH-1):0] wdata,
-    output  wire                     arready,
-    input   wire                     rready,
-    input   wire                     arvalid,
+    
+    // Read Address Channel
     input   wire [(pADDR_WIDTH-1):0] araddr,
-    output  wire                     rvalid,
-    output  wire [(pDATA_WIDTH-1):0] rdata,    
-    input   wire                     ss_tvalid, 
+    output  wire                     arready,
+    input   wire                     arvalid,
+	
+	// Read Data Channel
+	output  wire [(pDATA_WIDTH-1):0] rdata,    
+	output  wire                     rvalid,
+	input   wire                     rready,
+    
+	// Stream Slave
     input   wire [(pDATA_WIDTH-1):0] ss_tdata, 
-    input   wire                     ss_tlast, 
+    input   wire                     ss_tvalid, 
     output  wire                     ss_tready, 
-    input   wire                     sm_tready, 
-    output  wire                     sm_tvalid, 
+    input   wire                     ss_tlast, 
+
+	// Stream Master
     output  wire [(pDATA_WIDTH-1):0] sm_tdata, 
+    output  wire                     sm_tvalid, 
+    input   wire                     sm_tready, 
     output  wire                     sm_tlast, 
     
     // bram for tap RAM
@@ -38,32 +53,9 @@ module fir
     output  wire [(pDATA_WIDTH-1):0] data_Di,
     output  wire [(pADDR_WIDTH-1):0] data_A,
     input   wire [(pDATA_WIDTH-1):0] data_Do,
-
-    input   wire                     axis_clk,
-    input   wire                     axis_rst_n
 );
 begin
 
-    // RAM for tap
-    bram11 tap_RAM (
-        .CLK(axis_clk),
-        .WE(tap_WE),
-        .EN(tap_EN),
-        .Di(tap_Di),
-        .A(tap_A),
-        .Do(tap_Do)
-    );
-
-    // RAM for data: choose bram11 or bram12
-    bram11 data_RAM(
-        .CLK(axis_clk),
-        .WE(data_WE),
-        .EN(data_EN),
-        .Di(data_Di),
-        .A(data_A),
-        .Do(data_Do)
-    );
-	
 	// [ap_start]
 	// set by software/ testbench
 	// reset by engine when start data transfer
