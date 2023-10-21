@@ -246,7 +246,7 @@ module fir_tb
     reg error_coef;
     initial begin
         error_coef = 0;
-		#50;
+		//#50;
         $display("----Start the coefficient input(AXI-lite)----");
         
 		config_write(12'h10, data_length);
@@ -259,6 +259,7 @@ module fir_tb
         // read-back and check
 		$display(" Check Data Length ...");
 		config_read_check(12'h10, data_length, 32'hffffffff);
+		
         $display(" Check Coefficient ...");
         for(k=0; k < Tape_Num; k=k+1) begin
             config_read_check(12'h40+4*k, coef[k], 32'hffffffff);

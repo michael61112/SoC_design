@@ -24,7 +24,7 @@ module axi4lite_read
 
 	// config_write Feedback
 	output  wire [(pADDR_WIDTH-1):0]  config_read_address,
-	input   wire  [(pDATA_WIDTH-1):0] config_read_data
+	//input   wire  [(pDATA_WIDTH-1):0] config_read_data
 );
 begin // AXI4-Lite Read Transaction
 	
@@ -33,7 +33,7 @@ begin // AXI4-Lite Read Transaction
 	
 	reg arready_temp = 0;
 	reg rvalid_temp = 0;
-	reg [(pDATA_WIDTH-1):0] rdata_temp;
+	//reg [(pDATA_WIDTH-1):0] rdata_temp;
 	
 	reg [(pADDR_WIDTH-1):0]  config_read_address_temp;
 	//reg [(pDATA_WIDTH-1):0]  config_read_data_temp;
@@ -45,7 +45,7 @@ begin // AXI4-Lite Read Transaction
 			case(state)
 				S0: begin
 					if (arvalid) begin
-						config_read_address_temp <= araddr;
+						
 						state <= S1;
 					end 
 					else begin
@@ -62,7 +62,7 @@ begin // AXI4-Lite Read Transaction
 				end
 				S2: begin
 					if (rready) begin
-						rdata_temp = config_read_data;   //?
+						
 						state <= S3;
 					end
 					else begin
@@ -88,15 +88,15 @@ begin // AXI4-Lite Read Transaction
 	always @(posedge axis_clk) begin
 		case(state)
 			S0: begin arready_temp <= 1'b0; rvalid_temp <= 1'b0; end
-			S1: begin arready_temp <= 1'b1; rvalid_temp <= 1'b0; end
+			S1: begin arready_temp <= 1'b1; rvalid_temp <= 1'b0; config_read_address_temp <= araddr; end
 			S2: begin arready_temp <= 1'b0; rvalid_temp <= 1'b0; end
-			S3: begin arready_temp <= 1'b0; rvalid_temp <= 1'b1; end
+			S3: begin arready_temp <= 1'b0; rvalid_temp <= 1'b1; end //rdata_temp <= config_read_data; end
 		endcase
 	end
 
 	assign arready = (arready_temp) ? 1'b1 : 1'b0;
 	assign rvalid = (rvalid_temp) ? 1'b1 : 1'b0;	
-	//assign rdata = rdata_temp;
+	assign rdata = rdata_temp;
 	assign config_read_address = config_read_address_temp;
 	
 	always @(negedge arvalid) begin

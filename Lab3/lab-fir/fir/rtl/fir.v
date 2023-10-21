@@ -104,19 +104,21 @@ back_pressure
 	);
 
     
-	assign tap_WE = (~wready) ? 4'hf : 4'h0; //
-    assign tap_EN = config_write_address[6];
-    assign tap_Di = config_write_data;
-    assign tap_A = { 6'b0 , config_write_address[5:0]};
-    
+	assign tap_WE = (wvalid & wready) ? 4'hf : 4'h0;
+    assign tap_EN = config_write_address[6] | config_read_address[6];
+    assign tap_Di = wdata;
+    assign tap_A = (!tap_EN) ? 12'b0 :
+					(tap_WE) ? {6'b0, config_write_address[5:0]} : {6'b0, config_read_address[5:0]};
+    assign rdata = tap_Do;
 	//debug
 	assign out_adress = config_write_address;
 	assign out_data = config_write_data;
 	
+	
 ////////////////////////////////////////////////////////////////////////////
 //  AXI4 Lite Read Transaction
 	wire  [(pADDR_WIDTH-1):0]  config_read_address;
-	wire  [(pDATA_WIDTH-1):0]  config_read_data;
+	//wire  [(pDATA_WIDTH-1):0]  config_read_data;
 
 	axi4lite_read axi4lite_read_1(
 		.axis_clk(axis_clk),
@@ -128,8 +130,8 @@ back_pressure
 		.rdata(rdata),    
 		.rvalid(rvalid),
 		.rready(rready),
-		.config_read_address(config_read_address),
-		.config_read_data(config_read_data)
+		.config_read_address(config_read_address)//,
+		//.config_read_data(tap_Do)
 	);
 	
 end
