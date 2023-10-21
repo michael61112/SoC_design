@@ -248,8 +248,8 @@ module fir_tb
             config_write(12'h40+4*k, coef[k]);
         end
         awvalid <= 0; wvalid <= 0;
-		
 		*/
+		
         // read-back and check
 		$display(" Check Data Length ...");
 		config_read_check(12'h10, data_length, 32'hffffffff);
