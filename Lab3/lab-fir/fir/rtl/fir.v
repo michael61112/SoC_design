@@ -109,10 +109,12 @@ back_pressure
     assign tap_Di = wdata;
     assign tap_A = (!tap_EN) ? 12'b0 :
 					(tap_WE) ? {6'b0, config_write_address[5:0]} : {6'b0, config_read_address[5:0]};
-    assign rdata = tap_Do;
+    assign rdata = (config_read_address[6]) ? tap_Do :
+					(config_read_address == 12'h10) ? data_length :
+						(config_read_address == 12'h00) ? {29'b0, ap_idle, ap_done, ap_start} : 32'b0;
 	//debug
-	assign out_adress = config_write_address;
-	assign out_data = config_write_data;
+	assign out_adress = config_read_address;
+	assign out_data = rdata;
 	
 	
 ////////////////////////////////////////////////////////////////////////////
@@ -133,6 +135,21 @@ back_pressure
 		.config_read_address(config_read_address)//,
 		//.config_read_data(tap_Do)
 	);
-	
+///////////////////////////////////////////////////////////////////////////
+
+reg ap_start = 1'b0;
+reg ap_done = 1'b0;
+reg ap_idle = 1'b0;
+reg [31:0] data_length = 32'b0;
+
+always@(*) begin
+ap_start = !(config_write_address == 12'h00) ? ap_start :
+				(config_write_data & 32'b1) ? 1'b1 : 1'b0;
+
+
+
+data_length = ((config_write_address == 12'h10) & (wvalid & wready)) ? wdata : data_length;
+end
+
 end
 endmodule 

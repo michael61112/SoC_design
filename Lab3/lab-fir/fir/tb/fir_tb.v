@@ -32,6 +32,7 @@ module fir_tb
     wire  [1:0]					state;
 	wire  [(pADDR_WIDTH-1):0]   out_adress;
 	wire  [(pDATA_WIDTH-1):0]   out_data;
+	wire  [(pDATA_WIDTH-1):0]   rdata_in_debug;
     // Write Address Channel
     reg   [(pADDR_WIDTH-1): 0]  awaddr;
 	reg                         awvalid;
@@ -193,14 +194,10 @@ module fir_tb
 //  Step 1: Check FIR is idle, if not, wait until FIR is idle
 //  TB push Din_list to FIR by stream
     integer i;
-/*    initial begin
-        $display("------------Start simulation-----------");
+    initial begin
+        
         ss_tvalid = 0;
 		ss_tlast = 0; 
-        
-		while(error_coef) begin
-			config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
-		end
 		
 		$display("----Start the data input(AXI-Stream)----");
         for(i=0;i<(data_length-1);i=i+1) begin
@@ -211,9 +208,9 @@ module fir_tb
 		ss_tvalid = 0;
         $display("------End the data input(AXI-Stream)------");
     end
-*/
+
     // Prevent hang
-    integer timeout = (1000000);
+    integer timeout = (3000000); //1000000
     initial begin
         while(timeout > 0) begin
             @(posedge axis_clk);
@@ -246,17 +243,18 @@ module fir_tb
     reg error_coef;
     initial begin
         error_coef = 0;
-		//#50;
-        $display("----Start the coefficient input(AXI-lite)----");
-        
-		config_write(12'h10, data_length);
+		
+		$display("------------Start simulation-----------");
+		while(error_coef) begin
+			config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
+		end
+        $display("----Start the data_length¡Bcoefficient input(AXI-lite)----");
+        config_write(12'h10, data_length);
+		
         for(k=0; k< Tape_Num; k=k+1) begin
             config_write(12'h40+4*k, coef[k]);
         end
-        awvalid <= 0; wvalid <= 0;
-		
-		
-        // read-back and check
+
 		$display(" Check Data Length ...");
 		config_read_check(12'h10, data_length, 32'hffffffff);
 		
@@ -264,12 +262,11 @@ module fir_tb
         for(k=0; k < Tape_Num; k=k+1) begin
             config_read_check(12'h40+4*k, coef[k], 32'hffffffff);
         end
-        arvalid <= 0;
-        $display(" Tape programming done ...");
+        $display("----End the coefficient input(AXI-lite)----");
 		
         $display(" Start FIR");
         @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
-        $display("----End the coefficient input(AXI-lite)----");
+        
     end
 
 // Step5: When ap_done is sampled, compare Yn with golden data
@@ -319,6 +316,11 @@ module fir_tb
 
 //  Read config register by AXI-lite
 //  If not match the exp_data, set the error_coef to high
+
+	reg signed [(pDATA_WIDTH-1): 0] rdata_in = 32'b0;
+	always@(*) begin
+		rdata_in = (rvalid & rready) ? rdata : rdata_in;
+	end
     task config_read_check;
         input [11:0]        addr;
         input signed [31:0] exp_data;
@@ -331,20 +333,22 @@ module fir_tb
             arvalid <= 0;
             @(posedge axis_clk);
             @(posedge axis_clk);
-			rready <= 1; input_data <= rdata;
-            while (!rvalid) @(posedge axis_clk);
+			rready <= 1;
+            while (!rvalid) @(negedge axis_clk);
+			rdata_in <= rdata;
 			rready <= 0;
 			
-            if( (input_data & mask) != (exp_data & mask)) begin
-                $display("ERROR: exp = %d, input_data = %d", exp_data, input_data);
+            if( (rdata_in & mask) != (exp_data & mask)) begin
+                $display("ERROR: exp = %d, rdata_in = %d", exp_data, rdata_in);
                 error_coef <= 1;
             end else begin
-                $display("OK: exp = %d, input_data = %d", exp_data, input_data);
+                $display("OK: exp = %d, rdata_in = %d", exp_data, rdata_in);
             end
         end
     endtask
 
-
+wire rdata_in_debug;
+assign rdata_in_debug = rdata_in;
 //  Send 32'b in1 value to slave by stream
 //  Leave while loop when ss_tready is high
     task ss;
