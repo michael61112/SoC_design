@@ -7,7 +7,8 @@ module fir
 	// Global Signals 
 	input   wire                     axis_clk,
     input   wire                     axis_rst_n,
-	output  wire  [1:0] state_o,
+	output  wire  [1:0] 			 state_w,
+	output  wire  [1:0] 			 state_r,
 	output [(pADDR_WIDTH-1):0]       out_adress,
 	output [(pDATA_WIDTH-1):0]   	 out_data,
 	// Write Address Channel
@@ -92,7 +93,7 @@ back_pressure
 	axi4lite_write axi4lite_write_1(
 		.axis_clk(axis_clk),
 		.axis_rst_n(axis_rst_n),
-		.state_o(state_o),
+		.state_o(state_w),
 		.awaddr(awaddr),
 		.awvalid(awvalid),
 		.awready(awready),
@@ -102,7 +103,6 @@ back_pressure
 		.config_write_address(config_write_address),
 		.config_write_data(config_write_data)
 	);
-
     
 	assign tap_WE = (wvalid & wready) ? 4'hf : 4'h0;
     assign tap_EN = config_write_address[6] | config_read_address[6];
@@ -125,7 +125,7 @@ back_pressure
 	axi4lite_read axi4lite_read_1(
 		.axis_clk(axis_clk),
 		.axis_rst_n(axis_rst_n),
-		.state_o(state_o),
+		.state_o(state_r),
 		.araddr(araddr),
 		.arready(arready),
 		.arvalid(arvalid),

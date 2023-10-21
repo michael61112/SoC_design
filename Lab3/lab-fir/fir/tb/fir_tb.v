@@ -29,7 +29,8 @@ module fir_tb
 	// Global Signals    
     reg                         axis_clk;
     reg                         axis_rst_n;
-    wire  [1:0]					state;
+    wire  [1:0]					state_w;
+	wire  [1:0]					state_r;
 	wire  [(pADDR_WIDTH-1):0]   out_adress;
 	wire  [(pDATA_WIDTH-1):0]   out_data;
 	wire  [(pDATA_WIDTH-1):0]   rdata_in_debug;
@@ -87,7 +88,8 @@ module fir_tb
 
     fir fir_DUT(
 	
-		.state_o(state),
+		.state_w(state_w),
+		.state_r(state_r),
 		.out_adress(out_adress),
 		.out_data(out_data),
 		
@@ -334,7 +336,7 @@ module fir_tb
             @(posedge axis_clk);
             @(posedge axis_clk);
 			rready <= 1;
-            while (!rvalid) @(negedge axis_clk);
+            while (!rvalid) @(posedge axis_clk);
 			rdata_in <= rdata;
 			rready <= 0;
 			
