@@ -29,7 +29,9 @@ module fir_tb
 	// Global Signals    
     reg                         axis_clk;
     reg                         axis_rst_n;
-    wire		[1:0]					state;
+    wire  [1:0]					state;
+	wire  [(pADDR_WIDTH-1):0]   out_adress;
+	wire  [(pDATA_WIDTH-1):0]   out_data;
     // Write Address Channel
     reg   [(pADDR_WIDTH-1): 0]  awaddr;
 	reg                         awvalid;
@@ -83,6 +85,11 @@ module fir_tb
 
 
     fir fir_DUT(
+	
+		.state_o(state),
+		.out_adress(out_adress),
+		.out_data(out_data),
+		
         .awready(awready),
         .wready(wready),
         .awvalid(awvalid),
@@ -117,8 +124,7 @@ module fir_tb
         .data_Di(data_Di),
         .data_A(data_A),
         .data_Do(data_Do),
-
-		.state_o(state),
+		
         .axis_clk(axis_clk),
         .axis_rst_n(axis_rst_n)
 		

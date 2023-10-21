@@ -43,7 +43,7 @@ begin
 			case(state)
 				S0: begin
 					if (awvalid) begin
-						config_write_address_temp <= awaddr;
+						
 						state <= S1;
 					end 
 					else begin
@@ -60,7 +60,7 @@ begin
 				end
 				S2: begin
 					if (wvalid) begin
-						config_write_data_temp <= wdata;
+						
 						state <= S3;
 					end
 					else begin
@@ -86,9 +86,9 @@ begin
 	always @(posedge axis_clk) begin
 		case(state)
 			S0: begin awready_temp <= 1'b0; wready_temp <= 1'b0; end
-			S1: begin awready_temp <= 1'b1; wready_temp <= 1'b0; end
+			S1: begin awready_temp <= 1'b1; wready_temp <= 1'b0; config_write_address_temp <= awaddr;end
 			S2: begin awready_temp <= 1'b0; wready_temp <= 1'b1; end
-			S3: begin awready_temp <= 1'b0; wready_temp <= 1'b1; end
+			S3: begin awready_temp <= 1'b0; wready_temp <= 1'b1; config_write_data_temp <= wdata; end
 		endcase
 	end
 

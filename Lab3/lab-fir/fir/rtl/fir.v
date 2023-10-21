@@ -8,6 +8,8 @@ module fir
 	input   wire                     axis_clk,
     input   wire                     axis_rst_n,
 	output  wire  [1:0] state_o,
+	output [(pADDR_WIDTH-1):0]       out_adress,
+	output [(pDATA_WIDTH-1):0]   	 out_data,
 	// Write Address Channel
 	input   wire [(pADDR_WIDTH-1):0] awaddr,
 	input   wire                     awvalid,
@@ -102,12 +104,14 @@ back_pressure
 	);
 
     
-	assign tap_WE = wvalid;
+	assign tap_WE = (~wready) ? 4'hf : 4'h0; //
     assign tap_EN = config_write_address[6];
     assign tap_Di = config_write_data;
     assign tap_A = { 6'b0 , config_write_address[5:0]};
-    //((config_write_address & 12'hf0) == 12'h40) ? 
-	
+    
+	//debug
+	assign out_adress = config_write_address;
+	assign out_data = config_write_data;
 	
 ////////////////////////////////////////////////////////////////////////////
 //  AXI4 Lite Read Transaction
