@@ -87,7 +87,7 @@ begin
 		case(state)
 			S0: begin awready_temp <= 1'b0; wready_temp <= 1'b0; end
 			S1: begin awready_temp <= 1'b1; wready_temp <= 1'b0; end
-			S2: begin awready_temp <= 1'b0; wready_temp <= 1'b0; end
+			S2: begin awready_temp <= 1'b0; wready_temp <= 1'b1; end
 			S3: begin awready_temp <= 1'b0; wready_temp <= 1'b1; end
 		endcase
 	end

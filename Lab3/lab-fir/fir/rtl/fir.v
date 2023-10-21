@@ -83,7 +83,7 @@ back_pressure
 */
 // TB wait 11T to look dead lock or not
 
-//  AXI4 Lite Read Transaction
+//  AXI4 Lite Write Transaction
 	wire [(pADDR_WIDTH-1):0]  config_write_address;
 	wire [(pDATA_WIDTH-1):0]  config_write_data;
 
@@ -104,15 +104,15 @@ back_pressure
     
 	assign tap_WE = wvalid;
     assign tap_EN = config_write_address[6];
-    assign tap_Di = config_write_data,
+    assign tap_Di = config_write_data;
     assign tap_A = { 6'b0 , config_write_address[5:0]};
-    ((config_write_address & 12'hf0) == 12'h40) ? 
+    //((config_write_address & 12'hf0) == 12'h40) ? 
 	
 	
 ////////////////////////////////////////////////////////////////////////////
-//  AXI4 Lite Write Transaction
+//  AXI4 Lite Read Transaction
 	wire  [(pADDR_WIDTH-1):0]  config_read_address;
-	wire [(pDATA_WIDTH-1):0]  config_read_data;
+	wire  [(pDATA_WIDTH-1):0]  config_read_data;
 
 	axi4lite_read axi4lite_read_1(
 		.axis_clk(axis_clk),
@@ -127,5 +127,6 @@ back_pressure
 		.config_read_address(config_read_address),
 		.config_read_data(config_read_data)
 	);
+	
 end
 endmodule 

@@ -242,13 +242,13 @@ module fir_tb
         error_coef = 0;
 		#50;
         $display("----Start the coefficient input(AXI-lite)----");
-        /*
+        
 		config_write(12'h10, data_length);
         for(k=0; k< Tape_Num; k=k+1) begin
             config_write(12'h40+4*k, coef[k]);
         end
         awvalid <= 0; wvalid <= 0;
-		*/
+		
 		
         // read-back and check
 		$display(" Check Data Length ...");
@@ -303,8 +303,9 @@ module fir_tb
 			awvalid <= 0;
 			@(posedge axis_clk);
 			@(posedge axis_clk);
-            wvalid  <= 1; wdata <= data;
             while (!wready) @(posedge axis_clk);  // Leave the loop when write ready 
+			wvalid  <= 1; wdata <= data;
+			@(posedge axis_clk);
 			wvalid <= 0;
         end
     endtask
