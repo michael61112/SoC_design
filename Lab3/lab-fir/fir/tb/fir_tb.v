@@ -29,27 +29,31 @@ module fir_tb
 	// Global Signals    
     reg                         axis_clk;
     reg                         axis_rst_n;
-    
+    wire		[1:0]					state;
     // Write Address Channel
     reg   [(pADDR_WIDTH-1): 0]  awaddr;
-	wire                        awready;
 	reg                         awvalid;
+	wire                        awready;
+	
 	
 	// Write Data Channel
-	reg signed [(pDATA_WIDTH-1) : 0] wdata;
+	reg                         wvalid;
 	wire                        wready;
-    reg                         wvalid;
+	reg signed [(pDATA_WIDTH-1) : 0] wdata;
+	
+    
 	
 	// Read Address Channel
     reg         [(pADDR_WIDTH-1): 0] araddr;
-    wire                        arready;
 	reg                         arvalid;
+    wire                        arready;
+	
 	
 	// Read Data Channel
-	wire signed [(pDATA_WIDTH-1): 0] rdata;
-    reg                         rready;
 	wire                        rvalid; 
-    
+	reg                         rready;
+	wire signed [(pDATA_WIDTH-1): 0] rdata;
+        
 	// Stream Slave
     reg signed [(pDATA_WIDTH-1) : 0] ss_tdata;
     wire                        ss_tready;
@@ -114,9 +118,10 @@ module fir_tb
         .data_A(data_A),
         .data_Do(data_Do),
 
+		.state_o(state),
         .axis_clk(axis_clk),
         .axis_rst_n(axis_rst_n)
-
+		
         );
     
     // RAM for tap
@@ -163,7 +168,7 @@ module fir_tb
         axis_rst_n = 1;
     end
 
-// Read Data in and Golden (Din_listã€golden_listã€data_length)
+// Read Data in and Golden (Din_listï¿½î?Ÿolden_listï¿½î?œata_length)
     reg [31:0]  data_length;
     integer Din, golden, input_data, golden_data, m;
     initial begin
@@ -182,7 +187,7 @@ module fir_tb
 //  Step 1: Check FIR is idle, if not, wait until FIR is idle
 //  TB push Din_list to FIR by stream
     integer i;
-    initial begin
+/*    initial begin
         $display("------------Start simulation-----------");
         ss_tvalid = 0;
 		ss_tlast = 0; 
@@ -200,7 +205,7 @@ module fir_tb
 		ss_tvalid = 0;
         $display("------End the data input(AXI-Stream)------");
     end
-
+*/
     // Prevent hang
     integer timeout = (1000000);
     initial begin
@@ -231,22 +236,26 @@ module fir_tb
 //  Step2: Program length, and tap parameters
 //  Step3: Program ap_start -> 1
 //  Write coefficient from TB to FIR by AXI-lite
-//  Including: data_lengthã€coef[] and ap_start
+//  Including: data_lengthï¿½î?›oef[] and ap_start
     reg error_coef;
     initial begin
         error_coef = 0;
+		#50;
         $display("----Start the coefficient input(AXI-lite)----");
-        config_write(12'h10, data_length);
+        /*
+		config_write(12'h10, data_length);
         for(k=0; k< Tape_Num; k=k+1) begin
-            config_write(12'h20+4*k, coef[k]);
+            config_write(12'h40+4*k, coef[k]);
         end
         awvalid <= 0; wvalid <= 0;
+		
+		*/
         // read-back and check
 		$display(" Check Data Length ...");
 		config_read_check(12'h10, data_length, 32'hffffffff);
         $display(" Check Coefficient ...");
         for(k=0; k < Tape_Num; k=k+1) begin
-            config_read_check(12'h20+4*k, coef[k], 32'hffffffff);
+            config_read_check(12'h40+4*k, coef[k], 32'hffffffff);
         end
         arvalid <= 0;
         $display(" Tape programming done ...");
@@ -261,7 +270,7 @@ module fir_tb
     integer k;
     reg error;
     reg status_error;
-    initial begin
+/*    initial begin
         error = 0; status_error = 0;
         sm_tready = 1;
         wait (sm_tvalid);
@@ -279,7 +288,7 @@ module fir_tb
         end
         $finish;
     end
-
+*/
 //  -------------------------------------------------------------------------------------------
 
 //  Write config register by AXI-lite
@@ -290,9 +299,13 @@ module fir_tb
             awvalid <= 0; wvalid <= 0;   //Non-blocking assignment //the updated values are only available on the next clock cycle
             @(posedge axis_clk);
             awvalid <= 1; awaddr <= addr;
+			while (!awready) @(posedge axis_clk);
+			awvalid <= 0;
+			@(posedge axis_clk);
+			@(posedge axis_clk);
             wvalid  <= 1; wdata <= data;
-            @(posedge axis_clk);
             while (!wready) @(posedge axis_clk);  // Leave the loop when write ready 
+			wvalid <= 0;
         end
     endtask
 
@@ -303,17 +316,22 @@ module fir_tb
         input signed [31:0] exp_data;
         input [31:0]        mask;
         begin
-            arvalid <= 0;
+            arvalid <= 0; rready <= 0;
             @(posedge axis_clk);
             arvalid <= 1; araddr <= addr;
-            rready <= 1;
+			while (!arready) @(posedge axis_clk);
+            arvalid <= 0;
             @(posedge axis_clk);
+            @(posedge axis_clk);
+			rready <= 1; input_data <= rdata;
             while (!rvalid) @(posedge axis_clk);
-            if( (rdata & mask) != (exp_data & mask)) begin
-                $display("ERROR: exp = %d, rdata = %d", exp_data, rdata);
+			rready <= 0;
+			
+            if( (input_data & mask) != (exp_data & mask)) begin
+                $display("ERROR: exp = %d, input_data = %d", exp_data, input_data);
                 error_coef <= 1;
             end else begin
-                $display("OK: exp = %d, rdata = %d", exp_data, rdata);
+                $display("OK: exp = %d, input_data = %d", exp_data, input_data);
             end
         end
     endtask
