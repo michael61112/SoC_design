@@ -179,7 +179,7 @@ module fir_tb
 
 // Read Data in and Golden (Din_listï¿½î?Ÿolden_listï¿½î?œata_length)
     reg [31:0]  data_length;
-    integer Din, golden, input_data, golden_data, m;
+    integer Din, golden, input_data, golden_data, m, i;
     initial begin
         data_length = 0;
         Din = $fopen("./samples_triangular_wave.dat","r");
@@ -195,21 +195,7 @@ module fir_tb
 
 //  Step 1: Check FIR is idle, if not, wait until FIR is idle
 //  TB push Din_list to FIR by stream
-    integer i;
-    initial begin
-        
-        ss_tvalid = 0;
-		ss_tlast = 0; 
-		
-		$display("----Start the data input(AXI-Stream)----");
-        for(i=0;i<(data_length-1);i=i+1) begin
-			ss(Din_list[i]);
-        end
-        ss_tlast = 1;
-		ss(Din_list[(Data_Num-1)]);
-		ss_tvalid = 0;
-        $display("------End the data input(AXI-Stream)------");
-    end
+
 
     // Prevent hang
     integer timeout = (3000000); //1000000
@@ -245,7 +231,7 @@ module fir_tb
     reg error_coef;
     initial begin
         error_coef = 0;
-		
+		/*
 		$display("------------Start simulation-----------");
 		while(error_coef) begin
 			config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
@@ -268,7 +254,27 @@ module fir_tb
 		
         $display(" Start FIR");
         @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
-        
+		*/
+		///////////////////////////////////////////////////////////////////////////////////////////
+		ss_tvalid = 0;
+		ss_tlast = 0; 
+		
+		$display("----Start the data input(AXI-Stream)----");
+        for(i=0;i< 11;i=i+1) begin //(data_length-1)
+			ss(Din_list[i]);
+			$display("Din_list[%d]: %d", i, Din_list[i]);
+        end
+		/*
+        ss_tlast = 1;
+		ss(Din_list[(Data_Num-1)]);
+		ss_tvalid = 0;
+        $display("------End the data input(AXI-Stream)------");
+        */
+		for(i=0;i< 11;i=i+1) begin //(data_length-1)
+			sm(i+1, i);
+			//$display("read[%d]: %d", i, Din_list[i]);
+        end
+		
     end
 
 // Step5: When ap_done is sampled, compare Yn with golden data
@@ -358,10 +364,9 @@ assign rdata_in_debug = rdata_in;
         begin
             ss_tvalid <= 1;
             ss_tdata  <= in1;
-            @(posedge axis_clk);
-            while (!ss_tready) begin
-                @(posedge axis_clk);
-            end
+            @(posedge axis_clk);  //?
+            while (!ss_tready) @(posedge axis_clk);
+			ss_tvalid <= 0;
         end
     endtask
 
@@ -372,9 +377,8 @@ assign rdata_in_debug = rdata_in;
         input         [31:0] pcnt; // pattern count
         begin
             sm_tready <= 1;
-            @(posedge axis_clk) 
-            wait(sm_tvalid);
             while(!sm_tvalid) @(posedge axis_clk);
+			
             if (sm_tdata != in2) begin
                 $display("[ERROR] [Pattern %d] Golden answer: %d, Your answer: %d", pcnt, in2, sm_tdata);
                 error <= 1;

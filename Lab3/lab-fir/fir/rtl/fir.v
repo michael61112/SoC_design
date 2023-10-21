@@ -151,5 +151,45 @@ ap_start = !(config_write_address == 12'h00) ? ap_start :
 data_length = ((config_write_address == 12'h10) & (wvalid & wready)) ? wdata : data_length;
 end
 
+///////////////////////////////////////////////////////////////////////////
+
+reg BRAM_avail = 1'b1;
+reg [(pDATA_WIDTH-1):0] BRAM_in_data;
+reg stream_in_last;
+
+//  SS Bus Logic
+assign ss_tready = (ss_tvalid & BRAM_avail) ? 1'b1 : 1'b0;
+
+// Address Generater
+reg [(pADDR_WIDTH-1):0] addr_w = 12'h0;
+reg [(pADDR_WIDTH-1):0] addr_r = 12'h0;
+always@(posedge axis_clk) begin
+	if (ss_tready) begin
+		addr_w = (addr_w < 12'h68) ? (addr_w + 12'h4) : 12'h0;
+	end
+end
+
+//  RAM Control Logic	
+assign data_WE = (ss_tready) ? 4'hf : 4'h0;
+assign data_EN = 1'b1;
+assign data_Di = ss_tdata;
+assign data_A = (ss_tready) ? addr_w : 
+					(sm_tvalid) ? addr_r : 12'h00;
+//data_Do
+
+///////////////////////////////////////////////////////////////////////////
+//  SM Bus Logic
+reg [(pDATA_WIDTH-1):0] sm_tdata_temp;
+assign sm_tdata = data_Do;
+assign sm_tvalid = (BRAM_avail) ? 1'b1 : 1'b0;
+
+always@(posedge axis_clk) begin
+	if (sm_tready) begin
+		addr_r = (addr_r < 12'h68) ? (addr_r + 12'h4) : 12'h0;
+	end
+end
+///////////////////////////////////////////////////////////////////////////
+
+
 end
 endmodule 
