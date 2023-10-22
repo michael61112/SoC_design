@@ -263,6 +263,7 @@ module fir_tb
         for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
 			$display("Din_list[%d]: %d", i, Din_list[i]);
+			sm(i+1, i);
         end
 		/*
         ss_tlast = 1;
@@ -270,11 +271,12 @@ module fir_tb
 		ss_tvalid = 0;
         $display("------End the data input(AXI-Stream)------");
         */
+		/*
 		for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			sm(i+1, i);
 			//$display("read[%d]: %d", i, Din_list[i]);
         end
-		
+		*/
     end
 
 // Step5: When ap_done is sampled, compare Yn with golden data

@@ -153,12 +153,11 @@ end
 
 ///////////////////////////////////////////////////////////////////////////
 
-reg BRAM_avail = 1'b1;
-reg [(pDATA_WIDTH-1):0] BRAM_in_data;
-reg stream_in_last;
+wire BRAM_avail_w = (ss_tvalid & data_EN);
+wire BRAM_avail_r = !BRAM_avail_w;
 
 //  SS Bus Logic
-assign ss_tready = (ss_tvalid & BRAM_avail) ? 1'b1 : 1'b0;
+assign ss_tready = (BRAM_avail_w) ? 1'b1 : 1'b0;
 
 // Address Generater
 reg [(pADDR_WIDTH-1):0] addr_w = 12'h0;
@@ -169,6 +168,21 @@ always@(posedge axis_clk) begin
 	end
 end
 
+///////////////////////////////////////////////////////////////////////////
+
+//  SM Bus Logic
+assign sm_tvalid = (BRAM_avail_r & !(&data_WE) & data_EN) ? 1'b1 : 1'b0; ////
+
+assign sm_tdata = data_Do;
+
+// Address Generater
+always@(posedge axis_clk) begin
+	if (sm_tready) begin
+		addr_r = (addr_r < 12'h68) ? (addr_r + 12'h4) : 12'h0;
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////
 //  RAM Control Logic	
 assign data_WE = (ss_tready) ? 4'hf : 4'h0;
 assign data_EN = 1'b1;
@@ -176,19 +190,43 @@ assign data_Di = ss_tdata;
 assign data_A = (ss_tready) ? addr_w : 
 					(sm_tvalid) ? addr_r : 12'h00;
 //data_Do
-
 ///////////////////////////////////////////////////////////////////////////
-//  SM Bus Logic
-reg [(pDATA_WIDTH-1):0] sm_tdata_temp;
-assign sm_tdata = data_Do;
-assign sm_tvalid = (BRAM_avail) ? 1'b1 : 1'b0;
+/*
+reg [31:0]			result;
+reg [31:0]			result_temp;
+wire [31:0]	A=32'h3;
+wire [31:0] B=32'h2;
+reg [2:0] i;
 
-always@(posedge axis_clk) begin
-	if (sm_tready) begin
-		addr_r = (addr_r < 12'h68) ? (addr_r + 12'h4) : 12'h0;
+	mac mac1(
+		.axis_clk(axis_clk),
+		.reset(reset),
+		.A(A),
+		.B(B),
+		.result(result)
+	);
+
+always@(*) begin
+	tap_A = 12'h00;
+	data_A = 12'h00;
+	sm_tvalid = 1'b0;
+
+	reset = 1'b1;
+	@(posedge axis_clk);
+	reset = 1'b0;
+	
+	for (i = 0; i < 11; i = i + 1) begin
+		tap_A = tap_A + 4*i;
+		data_A = data_A + 4*i;
+		
+		A = tap_Do;
+		B = data_Do;
 	end
+	sm_tdata = result;
+	sm_tvalid = 1'b1;
 end
-///////////////////////////////////////////////////////////////////////////
+*/
+
 
 
 end
