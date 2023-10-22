@@ -153,8 +153,10 @@ end
 
 ///////////////////////////////////////////////////////////////////////////
 
+
+
 wire BRAM_avail_w = (ss_tvalid & data_EN);
-wire BRAM_avail_r = !BRAM_avail_w;
+wire BRAM_avail_r = ~BRAM_avail_w;
 
 //  SS Bus Logic
 assign ss_tready = (BRAM_avail_w) ? 1'b1 : 1'b0;
@@ -162,23 +164,44 @@ assign ss_tready = (BRAM_avail_w) ? 1'b1 : 1'b0;
 // Address Generater
 reg [(pADDR_WIDTH-1):0] addr_w = 12'h0;
 reg [(pADDR_WIDTH-1):0] addr_r = 12'h0;
-always@(posedge axis_clk) begin
-	if (ss_tready) begin
-		addr_w = (addr_w < 12'h68) ? (addr_w + 12'h4) : 12'h0;
-	end
-end
 
 ///////////////////////////////////////////////////////////////////////////
-
+wire fir_or_bram_out = 1'b0;  //just connect to FIR, if debug can change to BRAM
 //  SM Bus Logic
 assign sm_tvalid = (BRAM_avail_r & !(&data_WE) & data_EN) ? 1'b1 : 1'b0; ////
 
-assign sm_tdata = data_Do;
+
 
 // Address Generater
 always@(posedge axis_clk) begin
-	if (sm_tready) begin
-		addr_r = (addr_r < 12'h68) ? (addr_r + 12'h4) : 12'h0;
+	if (!axis_rst_n) begin
+		addr_w = 12'h0;
+		addr_r = 12'h0;
+	end
+	else begin
+	
+		if (ss_tready) begin
+			if (addr_w < 12'h028) begin
+				addr_w = (addr_w + 12'h4);
+			end
+			else begin
+				addr_w = 12'h0;
+			end
+		end
+		
+		else if (sm_tready) begin
+			if (addr_r < 12'h028) begin
+				addr_r = (addr_r + 12'h4);
+			end
+			else begin
+				addr_r = 12'h0;
+			end
+		end
+		
+		else begin
+			addr_w = addr_w;
+			addr_r = addr_r;
+		end
 	end
 end
 
@@ -186,9 +209,20 @@ end
 //  RAM Control Logic	
 assign data_WE = (ss_tready) ? 4'hf : 4'h0;
 assign data_EN = 1'b1;
+
 assign data_Di = ss_tdata;
+
 assign data_A = (ss_tready) ? addr_w : 
-					(sm_tvalid) ? addr_r : 12'h00;
+					(sm_tvalid) ? addr_r : data_A;
+					
+
+assign sm_tdata = (fir_or_bram_out) ? 32'b0 : data_Do;  // Change to Y
+
+
+
+
+
+
 //data_Do
 ///////////////////////////////////////////////////////////////////////////
 /*

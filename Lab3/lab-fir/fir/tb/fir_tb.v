@@ -170,12 +170,7 @@ module fir_tb
     end
 
 
-// Initial Reset
-    initial begin
-        axis_rst_n = 0;
-        @(posedge axis_clk); @(posedge axis_clk);
-        axis_rst_n = 1;
-    end
+
 
 // Read Data in and Golden (Din_listï¿½î?Ÿolden_listï¿½î?œata_length)
     reg [31:0]  data_length;
@@ -231,6 +226,10 @@ module fir_tb
     reg error_coef;
     initial begin
         error_coef = 0;
+		
+		axis_rst_n = 0;
+        @(posedge axis_clk); @(posedge axis_clk);
+        axis_rst_n = 1;
 		/*
 		$display("------------Start simulation-----------");
 		while(error_coef) begin
@@ -258,7 +257,14 @@ module fir_tb
 		///////////////////////////////////////////////////////////////////////////////////////////
 		ss_tvalid = 0;
 		ss_tlast = 0; 
-		
+		sm_tready = 0;
+		$display("----Start initial Data BRAM default value(AXI-Stream)----");
+        for(i=0;i< 11;i=i+1) begin //(data_length-1)
+			ss(32'b0);
+        end
+		for(i=0;i< 11;i=i+1) begin //(data_length-1)
+			sm(32'b0, i);
+        end
 		$display("----Start the data input(AXI-Stream)----");
         for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
@@ -388,6 +394,8 @@ assign rdata_in_debug = rdata_in;
             else begin
                 $display("[PASS] [Pattern %d] Golden answer: %d, Your answer: %d", pcnt, in2, sm_tdata);
             end
+			@(posedge axis_clk);
+			sm_tready <= 0;
             @(posedge axis_clk);
         end
     endtask
