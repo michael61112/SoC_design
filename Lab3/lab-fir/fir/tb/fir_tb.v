@@ -33,9 +33,9 @@ module fir_tb
 	wire  [1:0]					state_r;
 	wire  [1:0]					state_data_ram;
 	wire  [1:0] 			 last_state_o;
-	wire [(pADDR_WIDTH-1):0]       addr_r;
-	wire [(pADDR_WIDTH-1):0]       addr_w;
-	wire [(pADDR_WIDTH-1):0]       tb_A;
+	wire [(pADDR_WIDTH-1):0]       addr_r_o;
+	wire [(pADDR_WIDTH-1):0]       addr_w_o;
+	wire [(pADDR_WIDTH-1):0]       tb_A_o;
 	
 	wire  [(pADDR_WIDTH-1):0]   out_adress;
 	wire  [(pDATA_WIDTH-1):0]   out_data;
@@ -100,9 +100,9 @@ module fir_tb
 		.last_state_o(last_state_o),
 		.out_adress(out_adress),
 		.out_data(out_data),
-		.addr_r(addr_r),
-		.addr_w(addr_w),
-		.tb_A(tb_A),
+		.addr_r_o(addr_r_o),
+		.addr_w_o(addr_w_o),
+		.tb_A_o(tb_A_o),
 		
 		
         .awready(awready),
@@ -244,7 +244,7 @@ module fir_tb
 		axis_rst_n = 0;
         @(posedge axis_clk); @(posedge axis_clk);
         axis_rst_n = 1;
-		/*
+		
 		$display("------------Start simulation-----------");
 		while(error_coef) begin
 			config_read_check(12'h00, 32'h00, 32'h0000_000f); // check idle = 0
@@ -264,11 +264,7 @@ module fir_tb
             config_read_check(12'h40+4*k, coef[k], 32'hffffffff);
         end
         $display("----End the coefficient input(AXI-lite)----");
-		
-        $display(" Start FIR");
-        @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
-		*/
-		///////////////////////////////////////////////////////////////////////////////////////////
+
 		ss_tvalid = 0;
 		ss_tlast = 0; 
 		sm_tready = 0;
@@ -277,27 +273,28 @@ module fir_tb
 			ss(32'b0);
         end
 		
-		axis_rst_n = 1;
-		@(posedge axis_clk); 
-		axis_rst_n = 0;
-        @(posedge axis_clk); @(posedge axis_clk);
-        axis_rst_n = 1;
+        $display(" Start FIR");
+        @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
+		
+		///////////////////////////////////////////////////////////////////////////////////////////
+/*
 		
 		for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			sm(32'b0, i);
         end
-		
+
 		axis_rst_n = 1;
 		@(posedge axis_clk); 
 		axis_rst_n = 0;
         @(posedge axis_clk); @(posedge axis_clk);
         axis_rst_n = 1;
+*/		
 		
 		$display("----Start the data input(AXI-Stream)----");
-        for(i=0;i< 11;i=i+1) begin //(data_length-1)
+        for(i=0;i< (data_length-1);i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
-			$display("Din_list[%d]: %d", i, Din_list[i]);
-			sm(i+1, i);
+			
+			sm(golden_list[i],i);
         end
 		/*
         ss_tlast = 1;

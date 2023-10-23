@@ -86,7 +86,7 @@ begin
 	always @(posedge axis_clk) begin
 		case(state)
 			S0: begin awready_temp <= 1'b0; wready_temp <= 1'b0; end
-			S1: begin awready_temp <= 1'b1; wready_temp <= 1'b0; config_write_address_temp <= awaddr;end
+			S1: begin awready_temp <= 1'b1; wready_temp <= 1'b0; end
 			S2: begin awready_temp <= 1'b0; wready_temp <= 1'b1; end
 			S3: begin awready_temp <= 1'b0; wready_temp <= 1'b1; config_write_data_temp <= wdata; end
 		endcase
@@ -95,7 +95,7 @@ begin
 	assign awready = (awready_temp) ? 1'b1 : 1'b0;
 	assign wready = (wready_temp) ? 1'b1 : 1'b0;	
 	
-	assign config_write_address = config_write_address_temp;
+	assign config_write_address = awaddr;
 	assign config_write_data = config_write_data_temp;
 	
 	always @(negedge awvalid) begin

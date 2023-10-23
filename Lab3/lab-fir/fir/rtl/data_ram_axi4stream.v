@@ -5,7 +5,8 @@ module data_ram_axi4stream
 	parameter S1 = 3'b001, // TB write
 	parameter S2 = 3'b010, // TB read
 	parameter S3 = 3'b011, // FIR read
-	parameter S4 = 3'b100  // R/W Done
+	parameter S4 = 3'b100, // R/W Done
+	parameter S5 = 3'b101  // Send result
 )	
 (
 	input 							axis_clk,
@@ -19,14 +20,17 @@ module data_ram_axi4stream
 	input 	[(pADDR_WIDTH-1):0]  	tb_A,
 	input 							fir_request,
 	input 	[(pADDR_WIDTH-1):0]  	fir_A,
-	output  [1:0]					state_o,
+	output  [2:0]					state_o,
 
     // bram for data RAM
     output  wire [3:0]               data_WE,
     output  wire                     data_EN,
     output  wire [(pDATA_WIDTH-1):0] data_Di,
     output  wire [(pADDR_WIDTH-1):0] data_A,
-    input   wire [(pDATA_WIDTH-1):0] data_Do
+    input   wire [(pDATA_WIDTH-1):0] data_Do,
+	
+	input  							result_ready,
+	input	[(pDATA_WIDTH-1):0]		result_Y
 );
 begin
 
@@ -49,13 +53,19 @@ begin
 						state <= S1;
 					end 
 					else if (sm_tready) begin
-						if (fir_request) begin
-							state <= S3;
+						if (result_ready) begin
+							state <= S5;
 						end
 						else begin
-							state <= S2;
+							if (fir_request) begin
+								state <= S3;
+							end
+							else begin
+								state <= S2;
+							end
 						end
 					end
+					
 					else begin
 						state <= S0;
 					end
@@ -84,6 +94,9 @@ begin
 					else begin
 						state <= S0;
 					end
+				end
+				S5: begin
+						state <= S0;
 				end
 				default: begin 
 					state <= S0;
@@ -123,9 +136,16 @@ begin
 					data_EN_temp <= 1'b1;
 					data_A_temp <= fir_A;
 				end
-			S0: begin 	
+			S4: begin 	
 					ss_tready_temp <= 1'b0; 
 					sm_tvalid_temp <= 1'b0;
+					data_WE_temp <= 4'h0; 
+					data_EN_temp <= 1'b0;
+					data_A_temp <= 12'b0;
+				end
+			S5: begin 	
+					ss_tready_temp <= 1'b0; 
+					sm_tvalid_temp <= 1'b1;
 					data_WE_temp <= 4'h0; 
 					data_EN_temp <= 1'b0;
 					data_A_temp <= 12'b0;
@@ -146,7 +166,7 @@ begin
 	assign data_EN = data_EN_temp;
 	assign data_A = data_A_temp;
 	assign data_Di = ss_tdata;
-	assign sm_tdata = data_Do;
+	assign sm_tdata = (state == S5) ? result_Y : data_Do;
 	assign state_o = state;
 	
 end
