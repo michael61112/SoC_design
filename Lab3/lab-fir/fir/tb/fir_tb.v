@@ -31,6 +31,12 @@ module fir_tb
     reg                         axis_rst_n;
     wire  [1:0]					state_w;
 	wire  [1:0]					state_r;
+	wire  [1:0]					state_data_ram;
+	wire  [1:0] 			 last_state_o;
+	wire [(pADDR_WIDTH-1):0]       addr_r;
+	wire [(pADDR_WIDTH-1):0]       addr_w;
+	wire [(pADDR_WIDTH-1):0]       tb_A;
+	
 	wire  [(pADDR_WIDTH-1):0]   out_adress;
 	wire  [(pDATA_WIDTH-1):0]   out_data;
 	wire  [(pDATA_WIDTH-1):0]   rdata_in_debug;
@@ -90,8 +96,14 @@ module fir_tb
 	
 		.state_w(state_w),
 		.state_r(state_r),
+		.state_data_ram(state_data_ram),
+		.last_state_o(last_state_o),
 		.out_adress(out_adress),
 		.out_data(out_data),
+		.addr_r(addr_r),
+		.addr_w(addr_w),
+		.tb_A(tb_A),
+		
 		
         .awready(awready),
         .wready(wready),
@@ -227,6 +239,8 @@ module fir_tb
     initial begin
         error_coef = 0;
 		
+		axis_rst_n = 1;
+		@(posedge axis_clk); 
 		axis_rst_n = 0;
         @(posedge axis_clk); @(posedge axis_clk);
         axis_rst_n = 1;
@@ -262,9 +276,23 @@ module fir_tb
         for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(32'b0);
         end
+		
+		axis_rst_n = 1;
+		@(posedge axis_clk); 
+		axis_rst_n = 0;
+        @(posedge axis_clk); @(posedge axis_clk);
+        axis_rst_n = 1;
+		
 		for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			sm(32'b0, i);
         end
+		
+		axis_rst_n = 1;
+		@(posedge axis_clk); 
+		axis_rst_n = 0;
+        @(posedge axis_clk); @(posedge axis_clk);
+        axis_rst_n = 1;
+		
 		$display("----Start the data input(AXI-Stream)----");
         for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
@@ -363,7 +391,7 @@ module fir_tb
         end
     endtask
 
-wire rdata_in_debug;
+
 assign rdata_in_debug = rdata_in;
 //  Send 32'b in1 value to slave by stream
 //  Leave while loop when ss_tready is high
@@ -372,7 +400,7 @@ assign rdata_in_debug = rdata_in;
         begin
             ss_tvalid <= 1;
             ss_tdata  <= in1;
-            @(posedge axis_clk);  //?
+            @(posedge axis_clk);  //? if no clk, the for loop will finish immediately
             while (!ss_tready) @(posedge axis_clk);
 			ss_tvalid <= 0;
         end
@@ -380,11 +408,14 @@ assign rdata_in_debug = rdata_in;
 
 //  Receive 32'b FIR data from slave by stream
 //  If the result does not match golden, set error high
+
     task sm;
         input  signed [31:0] in2; // golden data
         input         [31:0] pcnt; // pattern count
         begin
+			
             sm_tready <= 1;
+			@(posedge axis_clk);  //? if no clk, the for loop will finish immediately
             while(!sm_tvalid) @(posedge axis_clk);
 			sm_tready <= 0;
 			

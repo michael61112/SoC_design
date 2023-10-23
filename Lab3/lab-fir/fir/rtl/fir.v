@@ -1,7 +1,12 @@
 module fir 
 #(  parameter pADDR_WIDTH = 12,
     parameter pDATA_WIDTH = 32,
-    parameter Tape_Num    = 11
+    parameter Tape_Num    = 11,
+	parameter S0 = 3'b000, // Idle
+	parameter S1 = 3'b001, // TB write
+	parameter S2 = 3'b010, // TB read
+	parameter S3 = 3'b011, // FIR read
+	parameter S4 = 3'b100  // R/W Done
 )
 (
 	// Global Signals 
@@ -9,8 +14,13 @@ module fir
     input   wire                     axis_rst_n,
 	output  wire  [1:0] 			 state_w,
 	output  wire  [1:0] 			 state_r,
+	output  wire  [1:0] 			 state_data_ram,
+	output  wire  [1:0] 			 last_state_o,
 	output [(pADDR_WIDTH-1):0]       out_adress,
 	output [(pDATA_WIDTH-1):0]   	 out_data,
+	output [(pADDR_WIDTH-1):0]       addr_r,
+	output [(pADDR_WIDTH-1):0]       addr_w,
+	output [(pADDR_WIDTH-1):0]       tb_A,
 	// Write Address Channel
 	input   wire [(pADDR_WIDTH-1):0] awaddr,
 	input   wire                     awvalid,
@@ -38,7 +48,7 @@ module fir
     input   wire                     ss_tlast, 
 
 	// Stream Master
-    output  wire [(pDATA_WIDTH-1):0] sm_tdata, 
+    output  wire  [(pDATA_WIDTH-1):0] sm_tdata, 
     output  wire                     sm_tvalid, 
     input   wire                     sm_tready, 
     output  wire                     sm_tlast, 
@@ -153,7 +163,7 @@ end
 
 ///////////////////////////////////////////////////////////////////////////
 
-
+/*
 
 wire BRAM_avail_w = (ss_tvalid & data_EN);
 wire BRAM_avail_r = ~BRAM_avail_w;
@@ -161,40 +171,57 @@ wire BRAM_avail_r = ~BRAM_avail_w;
 //  SS Bus Logic
 assign ss_tready = (BRAM_avail_w) ? 1'b1 : 1'b0;
 
-// Address Generater
-reg [(pADDR_WIDTH-1):0] addr_w = 12'h0;
-reg [(pADDR_WIDTH-1):0] addr_r = 12'h0;
+
 
 ///////////////////////////////////////////////////////////////////////////
 wire fir_or_bram_out = 1'b0;  //just connect to FIR, if debug can change to BRAM
 //  SM Bus Logic
 assign sm_tvalid = (BRAM_avail_r & !(&data_WE) & data_EN) ? 1'b1 : 1'b0; ////
-
-
+*/
 
 // Address Generater
+reg [(pADDR_WIDTH-1):0] addr_w = 12'h0;
+reg [(pADDR_WIDTH-1):0] addr_r = 12'h0;
+reg [(pADDR_WIDTH-1):0] fir_addr_r = 12'h0;
+
+reg [1:0] last_state;
 always@(posedge axis_clk) begin
-	if (!axis_rst_n) begin
-		addr_w = 12'h0;
-		addr_r = 12'h0;
-	end
-	else begin
-	
-		if (ss_tready) begin
-			addr_w = (addr_w < 12'h028) ? (addr_w + 12'h4) : 12'h0;
-		end
-		
-		else if (sm_tready) begin
-			addr_r = (addr_r < 12'h028) ? (addr_r + 12'h4) : 12'h0;
-		end
-		
-		else begin
-			addr_w = addr_w;
-			addr_r = addr_r;
-		end
+	if (state_data_ram != S0) begin
+		last_state <= state_data_ram;
 	end
 end
+assign last_state_o = last_state;
 
+
+always@(posedge axis_clk) begin
+	if (~axis_rst_n) begin
+		addr_w <= 12'h0;
+		addr_r <= 12'h0;
+		fir_addr_r <= 12'h0;
+		last_state <= S0;
+	end
+	else begin
+		if ((state_data_ram == S4) && (last_state == S1)) begin
+			addr_w <= (addr_w < 12'h028) ? (addr_w + 12'h4) : 12'h0;
+		end
+		
+		else if ((state_data_ram == S4) && ((last_state == S2) || (last_state == S3))) begin
+			addr_r <= (addr_r < 12'h028) ? (addr_r + 12'h4) : 12'h0;
+		end
+		else begin
+			addr_w <= addr_w;
+			addr_r <= addr_r;
+		end
+	end
+	last_state <= state_data_ram;
+end
+
+wire [(pADDR_WIDTH-1):0] tb_A;
+wire [(pADDR_WIDTH-1):0] fir_A = 12'h0;
+
+assign tb_A = (state_data_ram == S1) ? addr_w : addr_r;
+assign fir_A = fir_addr_r;
+/*
 ///////////////////////////////////////////////////////////////////////////
 //  RAM Control Logic	
 assign data_WE = (ss_tready) ? 4'hf : 4'h0;
@@ -207,9 +234,31 @@ assign data_A = (ss_tready) ? addr_w :
 					
 
 assign sm_tdata = (fir_or_bram_out) ? 32'b0 : data_Do;  // Change to Y
+*/
+///////////////////////////////////////////////////////////////////////////
 
 
+//wire ram_rw;
 
+data_ram_axi4stream data_ram_axi4stream1(
+	.axis_clk(axis_clk),
+	.axis_rst_n(axis_rst_n),
+	.ss_tvalid(ss_tvalid),
+	.ss_tready(ss_tready),
+	.ss_tdata(ss_tdata),
+	.sm_tready(sm_tready),
+	.sm_tvalid(sm_tvalid),
+	.sm_tdata(sm_tdata),
+	.tb_A(tb_A),
+	.fir_request(fir_request),
+	.fir_A(fir_A),
+	.state_o(state_data_ram),
+	.data_WE(data_WE),
+	.data_EN(data_EN),
+	.data_A(data_A),
+	.data_Di(data_Di),
+	.data_Do(data_Do)
+);
 
 
 
