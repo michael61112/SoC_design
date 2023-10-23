@@ -48,24 +48,19 @@ begin
 			state <= S0;
 		end else begin
 			case(state)
-				S0: begin
-					if (ss_tvalid) begin
+				S0: begin				
+					if(result_ready) begin
+						state <= S5;
+					end
+					else if(fir_request) begin
+						state <= S3;
+					end
+					else if (ss_tvalid) begin
 						state <= S1;
 					end 
 					else if (sm_tready) begin
-						if (result_ready) begin
-							state <= S5;
-						end
-						else begin
-							if (fir_request) begin
-								state <= S3;
-							end
-							else begin
-								state <= S2;
-							end
-						end
-					end
-					
+						state <= S2;
+					end			
 					else begin
 						state <= S0;
 					end
@@ -80,17 +75,18 @@ begin
 						state <= S4;
 				end
 				S4: begin
-					if (ss_tvalid) begin
+					if(result_ready) begin
+						state <= S5;
+					end
+					else if(fir_request) begin
+						state <= S3;
+					end
+					else if (ss_tvalid) begin
 						state <= S1;
 					end 
 					else if (sm_tready) begin
-						if (fir_request) begin
-							state <= S3;
-						end
-						else begin
-							state <= S2;
-						end
-					end
+						state <= S2;
+					end			
 					else begin
 						state <= S0;
 					end

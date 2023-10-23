@@ -15,13 +15,18 @@ module fir
     input   wire                     axis_rst_n,
 	output  wire  [1:0] 			 state_w,
 	output  wire  [1:0] 			 state_r,
-	output  wire  [1:0] 			 state_data_ram,
-	output  wire  [1:0] 			 last_state_o,
+	output  wire  [2:0] 			 state_data_ram,
+	output  wire  [2:0] 			 last_state_o,
+	output  wire  [2:0] 			 status_address_gen_o,
 	output [(pADDR_WIDTH-1):0]       out_adress,
 	output [(pDATA_WIDTH-1):0]   	 out_data,
 	output [(pADDR_WIDTH-1):0]       addr_r_o,
 	output [(pADDR_WIDTH-1):0]       addr_w_o,
 	output [(pADDR_WIDTH-1):0]       tb_A_o,
+	
+	output  wire  					 result_ready_o,
+	output  wire  					 fir_start_o,
+	output  wire  					 fir_request_o,
 	// Write Address Channel
 	input   wire [(pADDR_WIDTH-1):0] awaddr,
 	input   wire                     awvalid,
@@ -308,6 +313,10 @@ reg [11:0]			tap_addr_r;
 reg fir_start;
 reg fir_request;
 
+
+assign result_ready_o = result_ready;
+assign fir_start_o = fir_start;
+assign fir_request_o = fir_request;
 mac mac1(
 	.axis_clk(axis_clk),
 	.reset(mac_reset),
@@ -316,6 +325,22 @@ mac mac1(
 	.result(result_Y)
 );
 
+address_gen address_gen1(
+	.axis_clk(axis_clk),
+	.axis_rst_n(axis_rst_n),
+	.state_o(status_address_gen_o),
+	.state_data_ram(state_data_ram),
+	.fir_start(fir_start),
+	
+    .mac_reset(mac_reset),
+    .fir_request(fir_request),
+	.result_ready(result_ready),
+	//.counter(counter),
+	
+	.tap_addr_r(tap_addr_r),
+	.fir_addr_r(fir_addr_r) 
+);
+/*
 always@(posedge axis_clk) begin
 	if (~axis_rst_n) begin
 		tap_addr_r = 12'h00;
@@ -342,6 +367,7 @@ always@(posedge axis_clk) begin
 		counter <= counter + 10'b1;
 	end
 end
+*/
 
 end
 endmodule 
