@@ -386,6 +386,7 @@ assign rdata_in_debug = rdata_in;
         begin
             sm_tready <= 1;
             while(!sm_tvalid) @(posedge axis_clk);
+			sm_tready <= 0;
 			
             if (sm_tdata != in2) begin
                 $display("[ERROR] [Pattern %d] Golden answer: %d, Your answer: %d", pcnt, in2, sm_tdata);
@@ -394,9 +395,6 @@ assign rdata_in_debug = rdata_in;
             else begin
                 $display("[PASS] [Pattern %d] Golden answer: %d, Your answer: %d", pcnt, in2, sm_tdata);
             end
-			@(posedge axis_clk);
-			sm_tready <= 0;
-            @(posedge axis_clk);
         end
     endtask
 endmodule

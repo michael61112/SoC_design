@@ -181,21 +181,11 @@ always@(posedge axis_clk) begin
 	else begin
 	
 		if (ss_tready) begin
-			if (addr_w < 12'h028) begin
-				addr_w = (addr_w + 12'h4);
-			end
-			else begin
-				addr_w = 12'h0;
-			end
+			addr_w = (addr_w < 12'h028) ? (addr_w + 12'h4) : 12'h0;
 		end
 		
 		else if (sm_tready) begin
-			if (addr_r < 12'h028) begin
-				addr_r = (addr_r + 12'h4);
-			end
-			else begin
-				addr_r = 12'h0;
-			end
+			addr_r = (addr_r < 12'h028) ? (addr_r + 12'h4) : 12'h0;
 		end
 		
 		else begin
