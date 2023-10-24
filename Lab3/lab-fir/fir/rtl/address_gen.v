@@ -16,11 +16,12 @@ module address_gen
 	
 	// Write Address Channel
 	input  wire [2:0]				 state_data_ram ,
+	input  wire [2:0]				 last_state ,
 	input  wire                      fir_start,
-	
+	input  wire                      sm_fready,
+	input  wire                      sm_fvalid,
 	
     output wire                     mac_reset,
-    output wire                     fir_request,
 	output wire 					result_ready,
 	output wire 					mac_EN,
 	output  wire	[3:0]				 i_o,
@@ -37,7 +38,8 @@ begin
 	assign state_o = state;
 	//reg [9:0]				 counter_temp;
 	reg mac_reset_temp;
-	reg fir_request_temp;
+	reg sm_fready_temp;
+	reg mac_EN_temp;
 	reg result_ready_temp;
 	reg [(pADDR_WIDTH-1):0]		 tap_addr_r_temp;
 	reg [(pADDR_WIDTH-1):0] 		 fir_addr_r_temp; 
@@ -48,7 +50,7 @@ begin
 		end else begin
 			case(state)
 				S0: begin
-					if (state_data_ram == S1 && fir_start) begin
+					if (last_state == S1 && fir_start) begin
 						state <= S1;
 					end
 					else begin
@@ -57,20 +59,28 @@ begin
 				end
 				S1: begin
 					if (i == 4'd11) begin
-						state <= S3;
+						state <= S5;
 					end
 					else begin
 						state <= S2;
 					end
 				end
 				S2: begin
-					state <= S4;
+					if (sm_fvalid) begin
+						state <= S3;
+					end
+					else begin
+						state <= S2;
+					end
 				end
 				S3: begin
-					state <= S0;
+					state <= S4;
 				end
 				S4: begin
 					state <= S1;
+				end
+				S5: begin 
+					state <= S0;
 				end
 				default: begin 
 					state <= S0;
@@ -82,31 +92,33 @@ begin
 	// Set output value
 	always @(posedge axis_clk) begin
 		case(state)
-			S0: begin mac_reset_temp <= 1'b1; fir_request_temp <= 1'b0; result_ready_temp <= 1'b0; 
+			S0: begin mac_reset_temp <= 1'b1; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
 				tap_addr_r_temp <= 12'h00; 
 				fir_addr_r_temp <= 12'h00;
 				i <= 4'h0;
 				end
-			S1: begin mac_reset_temp <= 1'b0; fir_request_temp <= 1'b1; result_ready_temp <= 1'b0; end
-			S2: begin mac_reset_temp <= 1'b0; fir_request_temp <= 1'b1; result_ready_temp <= 1'b0; 
-				tap_addr_r_temp <= (tap_addr_r_temp < 12'h028) ? (tap_addr_r_temp + 12'h4) : 12'h0;
-				fir_addr_r_temp <= (fir_addr_r_temp < 12'h028) ? (fir_addr_r_temp + 12'h4) : 12'h0;
-				i <= i + 4'h1;
-			end
-			S3: begin mac_reset_temp <= 1'b0; fir_request_temp <= 1'b1; result_ready_temp <= 1'b1; end
+			S1: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; end
+			S2: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b1; mac_EN_temp <= 1'b0; end
+			S3: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b1; end
 				//counter = counter + 10'b1; end
-			S4: begin mac_reset_temp <= 1'b0; fir_request_temp <= 1'b1; result_ready_temp <= 1'b0; end
+			S4: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; 
+						tap_addr_r_temp <= (tap_addr_r_temp < 12'h028) ? (tap_addr_r_temp + 12'h4) : 12'h0;
+						fir_addr_r_temp <= (fir_addr_r_temp < 12'h028) ? (fir_addr_r_temp + 12'h4) : 12'h0;
+						i <= i + 4'h1;
+				end
+			S5: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b1; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; end
 		endcase
 	end
 
 	assign mac_reset = mac_reset_temp;
-	assign fir_request = fir_request_temp;
+	
 	assign result_ready = result_ready_temp;
 	
 	assign tap_addr_r = tap_addr_r_temp;
 	assign fir_addr_r = fir_addr_r_temp;
 	assign i_o = i;
-	assign mac_EN = (state == S4) ? 1'b1 : 1'b0;
+	assign sm_fready = sm_fready_temp;
+	assign mac_EN = mac_EN_temp;
 	//assign counter_o = counter_temp;
 end
 endmodule

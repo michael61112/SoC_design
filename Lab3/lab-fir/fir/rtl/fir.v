@@ -26,10 +26,14 @@ module fir
 	
 	output  wire  					 fir_start_o,
 	output  wire  					 mac_reset_o,
-	output  wire  					 fir_request_o,
 	output  wire  					 result_ready_o,
 	output  wire [3:0]				 i_o,
+	output  [(pDATA_WIDTH-1):0]				 A_o,
+	output  [(pDATA_WIDTH-1):0]				 B_o,
 	output  [(pDATA_WIDTH-1):0]				 result_Y_o,
+	output  [(pDATA_WIDTH-1):0]				 sm_fdata_o,
+	output wire						mac_EN_o,
+	
 	
 	// Write Address Channel
 	input   wire [(pADDR_WIDTH-1):0] awaddr,
@@ -142,8 +146,10 @@ data_ram_axi4stream data_ram_axi4stream1(
 	.sm_tready(sm_tready),
 	.sm_tvalid(sm_tvalid),
 	.sm_tdata(sm_tdata),
+	.sm_fready(sm_fready),
+	.sm_fvalid(sm_fvalid),
+	.sm_fdata(sm_fdata),
 	.tb_A(tb_A),
-	.fir_request(fir_request),
 	.fir_A(fir_A),
 	.state_o(state_data_ram),
 	.data_WE(data_WE),
@@ -151,6 +157,7 @@ data_ram_axi4stream data_ram_axi4stream1(
 	.data_A(data_A),
 	.data_Di(data_Di),
 	.data_Do(data_Do),
+	.ap_idle(ap_idle),
 	.result_ready(result_ready),
 	.result_Y(result_Y)
 );
@@ -212,7 +219,7 @@ end
 	// set when FIR engine processes the last data and last data is transferred
 	// reset when ap_start is sampled
 ///////////////////////////////////////////////////////////////////////////
-	assign tap_WE = (wvalid & wready) ? 4'hf : 4'h0;
+	assign tap_WE = (wvalid & wready & awaddr[6]) ? 4'hf : 4'h0;
     assign tap_EN = config_write_address[6] | config_read_address[6];
     assign tap_Di = wdata;
 	
@@ -222,7 +229,7 @@ end
 				*/	
 	assign tap_A = (!tap_EN) ? 12'b0 :
 					(&tap_WE) ? {6'b0, config_write_address[5:0]} : 
-					(fir_start) ? fir_addr_r : {6'b0, config_read_address[5:0]};				//fir_addr_r
+					(fir_start) ? data_A : {6'b0, config_read_address[5:0]};				//fir_addr_r
 
 					
 					
@@ -240,10 +247,15 @@ reg [(pADDR_WIDTH-1):0] addr_r;
 wire [(pADDR_WIDTH-1):0]		tap_addr_r;
 wire [(pADDR_WIDTH-1):0] fir_addr_r;
 
-reg [1:0] last_state;
-always@(posedge axis_clk) begin
-	if (state_data_ram != S0) begin
-		last_state <= state_data_ram;
+reg [2:0] last_state;
+always@(negedge axis_clk) begin
+	if (~axis_rst_n) begin
+		last_state <= S0;
+	end
+	else begin
+		if (state_data_ram != S0) begin
+			last_state <= state_data_ram;
+		end
 	end
 end
 assign last_state_o = last_state;
@@ -254,16 +266,16 @@ always@(posedge axis_clk) begin
 		addr_w <= 12'h0;
 		addr_r <= 12'h0;
 		//fir_addr_r <= 12'h0;
-		last_state <= S0;
+		
 		//tap_A_temp <= 12'b0;
 	end
 	else begin
 		// Data address assignment
-		if ((state_data_ram == S4) && (last_state == S1)) begin
+		if ((state_data_ram == S0) && (last_state == S1)) begin
 			addr_w <= (addr_w < 12'h028) ? (addr_w + 12'h4) : 12'h0;
 		end
 		
-		else if ((state_data_ram == S4) && ((last_state == S2) || (last_state == S3))) begin
+		else if ((state_data_ram == S0) && (last_state == S2)) begin
 			addr_r <= (addr_r < 12'h028) ? (addr_r + 12'h4) : 12'h0;
 		end
 		else begin
@@ -290,8 +302,6 @@ always@(posedge axis_clk) begin
 		end
 	*/
 	end
-	
-	last_state <= state_data_ram;
 end
 
 wire [(pADDR_WIDTH-1):0] tb_A;
@@ -312,7 +322,6 @@ wire [31:0]			result_Y;
 reg 				fir_start;
 
 wire					mac_reset;
-wire 				fir_request;
 wire					result_ready;
 
 
@@ -322,19 +331,24 @@ reg [31:0] B;
 
 wire mac_EN;
 
+wire 							sm_fready;
+wire 							sm_fvalid;
+wire 	[(pDATA_WIDTH-1):0]		sm_fdata;
+assign A_o = tap_Do;
+assign B_o = sm_fdata;
 assign result_Y_o = result_Y;
 
 assign result_ready_o = result_ready;
 assign fir_start_o = fir_start;
-assign fir_request_o = fir_request;
 assign mac_reset_o = mac_reset;
-
+assign mac_EN_o = mac_EN;
+assign sm_fdata_o = sm_fdata;
 mac mac1(
 	.axis_clk(axis_clk),
 	.reset(mac_reset),
 	.mac_EN(mac_EN),
 	.A(tap_Do),
-	.B(data_Do),
+	.B(sm_fdata),
 	.result(result_Y)
 );
 
@@ -343,10 +357,14 @@ address_gen address_gen1(
 	.axis_rst_n(axis_rst_n),
 	.state_o(status_address_gen_o),
 	.state_data_ram(state_data_ram),
+	.last_state(last_state),
 	.fir_start(fir_start),
 	
+	
+	.sm_fready(sm_fready),
+	.sm_fvalid(sm_fvalid),
+	
     .mac_reset(mac_reset),
-    .fir_request(fir_request),
 	.result_ready(result_ready),
 	.mac_EN(mac_EN),
 	.i_o(i_o),
@@ -355,34 +373,6 @@ address_gen address_gen1(
 	.tap_addr_r(tap_addr_r),
 	.fir_addr_r(fir_addr_r) 
 );
-/*
-always@(posedge axis_clk) begin
-	if (~axis_rst_n) begin
-		tap_addr_r = 12'h00;
-		fir_addr_r = 12'h00;
-		result_ready = 1'b0;
-		mac_reset = 1'b0;
-		fir_request = 1'b0;
-	end
-	else if (state_data_ram == S1 && fir_start)begin
-		result_ready = 1'b0;
-		mac_reset = 1'b0;
-		fir_request = 1'b1;
-		for (i = 0; i < 11; i = i + 1) begin
-			tap_addr_r <= (tap_addr_r < 12'h028) ? (tap_addr_r + 12'h4) : 12'h0;
-			fir_addr_r <= (fir_addr_r < 12'h028) ? (fir_addr_r + 12'h4) : 12'h0;
-			
-			A <= tap_Do;
-			B <= data_Do;
-			
-		end
-		result_ready = 1'b1;
-		mac_reset = 1'b1;
-		fir_request = 1'b0;
-		counter <= counter + 10'b1;
-	end
-end
-*/
 
 end
 endmodule 
