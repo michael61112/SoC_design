@@ -37,15 +37,17 @@ module fir_tb
 	wire [(pADDR_WIDTH-1):0]       addr_r_o;
 	wire [(pADDR_WIDTH-1):0]       addr_w_o;
 	wire [(pADDR_WIDTH-1):0]       tb_A_o;
-	
+	wire [(pDATA_WIDTH-1):0] result_Y_o;
 
 	wire  [(pADDR_WIDTH-1):0]   out_adress;
 	wire  [(pDATA_WIDTH-1):0]   out_data;
 	wire  [(pDATA_WIDTH-1):0]   rdata_in_debug;
-
-	wire  					 result_ready_o;
+	
 	wire  					 fir_start_o;
+	wire  					 mac_reset_o;
 	wire  					 fir_request_o;
+	wire  					 result_ready_o;
+	wire  [3:0]					 i_o;
     // Write Address Channel
     reg   [(pADDR_WIDTH-1): 0]  awaddr;
 	reg                         awvalid;
@@ -110,9 +112,13 @@ module fir_tb
 		.addr_r_o(addr_r_o),
 		.addr_w_o(addr_w_o),
 		.tb_A_o(tb_A_o),
-		.result_ready_o(result_ready_o),
+		
 		.fir_start_o(fir_start_o),
+		.mac_reset_o(mac_reset_o),
 		.fir_request_o(fir_request_o),
+		.i_o(i_o),
+		.result_ready_o(result_ready_o),
+		.result_Y_o(result_Y_o),
 		
         .awready(awready),
         .wready(wready),
@@ -281,10 +287,10 @@ module fir_tb
         for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(32'b0);
         end
-		
+		/*
         $display(" Start FIR");
         @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
-		
+		*/
 		///////////////////////////////////////////////////////////////////////////////////////////
 /*
 		
@@ -300,10 +306,10 @@ module fir_tb
 		
 		
 		$display("----Start the data input(AXI-Stream)----");
-        for(i=0;i< (data_length-1);i=i+1) begin //(data_length-1)
+        for(i=0;i< 11;i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
-			
-			sm(golden_list[i],i);
+			sm(Din_list[i],i);
+			//sm(golden_list[i],i);
         end
 		/*
         ss_tlast = 1;

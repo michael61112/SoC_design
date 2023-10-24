@@ -24,9 +24,13 @@ module fir
 	output [(pADDR_WIDTH-1):0]       addr_w_o,
 	output [(pADDR_WIDTH-1):0]       tb_A_o,
 	
-	output  wire  					 result_ready_o,
 	output  wire  					 fir_start_o,
+	output  wire  					 mac_reset_o,
 	output  wire  					 fir_request_o,
+	output  wire  					 result_ready_o,
+	output  wire [3:0]				 i_o,
+	output  [(pDATA_WIDTH-1):0]				 result_Y_o,
+	
 	// Write Address Channel
 	input   wire [(pADDR_WIDTH-1):0] awaddr,
 	input   wire                     awvalid,
@@ -171,6 +175,7 @@ always@(*) begin
 			if (config_write_data & 32'b1) begin
 				ap_start <= 1'b1;
 				ap_idle <= 1'b0;
+				fir_start <= 1'b1;
 			end
 			else begin
 				ap_start <= 1'b0;
@@ -232,7 +237,8 @@ end
 // Address Generater
 reg [(pADDR_WIDTH-1):0] addr_w;
 reg [(pADDR_WIDTH-1):0] addr_r;
-reg [(pADDR_WIDTH-1):0] fir_addr_r;
+wire [(pADDR_WIDTH-1):0]		tap_addr_r;
+wire [(pADDR_WIDTH-1):0] fir_addr_r;
 
 reg [1:0] last_state;
 always@(posedge axis_clk) begin
@@ -247,7 +253,7 @@ always@(posedge axis_clk) begin
 	if (~axis_rst_n) begin
 		addr_w <= 12'h0;
 		addr_r <= 12'h0;
-		fir_addr_r <= 12'h0;
+		//fir_addr_r <= 12'h0;
 		last_state <= S0;
 		//tap_A_temp <= 12'b0;
 	end
@@ -303,25 +309,32 @@ assign tb_A_o = tb_A;
 ///////////////////////////////////////////////////////////////////////////
 
 wire [31:0]			result_Y;
-reg					result_ready;
-reg					mac_reset;
+reg 				fir_start;
+
+wire					mac_reset;
+wire 				fir_request;
+wire					result_ready;
+
+
 reg [9:0]			counter;
 reg [31:0]	A;
 reg [31:0] B;
-reg [2:0] i;
-reg [11:0]			tap_addr_r;
-reg fir_start;
-reg fir_request;
 
+wire mac_EN;
+
+assign result_Y_o = result_Y;
 
 assign result_ready_o = result_ready;
 assign fir_start_o = fir_start;
 assign fir_request_o = fir_request;
+assign mac_reset_o = mac_reset;
+
 mac mac1(
 	.axis_clk(axis_clk),
 	.reset(mac_reset),
-	.A(A),
-	.B(B),
+	.mac_EN(mac_EN),
+	.A(tap_Do),
+	.B(data_Do),
 	.result(result_Y)
 );
 
@@ -335,6 +348,8 @@ address_gen address_gen1(
     .mac_reset(mac_reset),
     .fir_request(fir_request),
 	.result_ready(result_ready),
+	.mac_EN(mac_EN),
+	.i_o(i_o),
 	//.counter(counter),
 	
 	.tap_addr_r(tap_addr_r),

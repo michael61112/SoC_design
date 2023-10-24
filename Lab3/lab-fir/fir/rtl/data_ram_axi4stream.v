@@ -34,7 +34,7 @@ module data_ram_axi4stream
 );
 begin
 
-	reg [1:0] 					state;
+	reg [2:0] 					state;
 	reg 						ss_tready_temp;
 	reg 						sm_tvalid_temp;
 	reg [3:0] 					data_WE_temp;
@@ -109,10 +109,10 @@ begin
 					sm_tvalid_temp <= 1'b0;
 					data_WE_temp <= 4'h0; 
 					data_EN_temp <= 1'b0;
-					data_A_temp <= 12'b0;
+					data_A_temp <= 12'hfff;
 				end
 			S1: begin 
-					ss_tready_temp <= 1'b1;
+					ss_tready_temp <= 1'b0; //
 					sm_tvalid_temp <= 1'b0;
 					data_WE_temp <= 4'hf;
 					data_EN_temp <= 1'b1;
@@ -120,31 +120,31 @@ begin
 				end
 			S2: begin 
 					ss_tready_temp <= 1'b0; 
-					sm_tvalid_temp <= 1'b1;
-					data_WE_temp <= 4'hf; 
+					sm_tvalid_temp <= 1'b0;
+					data_WE_temp <= 4'h0; 
 					data_EN_temp <= 1'b1;
 					data_A_temp <= tb_A;
 				end
 			S3: begin 
 					ss_tready_temp <= 1'b0; 
-					sm_tvalid_temp <= 1'b1;
-					data_WE_temp <= 4'hf; 
+					sm_tvalid_temp <= 1'b0; // 
+					data_WE_temp <= 4'h0; 
 					data_EN_temp <= 1'b1;
 					data_A_temp <= fir_A;
 				end
 			S4: begin 	
-					ss_tready_temp <= 1'b0; 
-					sm_tvalid_temp <= 1'b0;
+					ss_tready_temp <= 1'b1; 
+					sm_tvalid_temp <= 1'b1; //
 					data_WE_temp <= 4'h0; 
-					data_EN_temp <= 1'b0;
-					data_A_temp <= 12'b0;
+					data_EN_temp <= 1'b1; // check waveform
+					data_A_temp <= 12'hfff;
 				end
 			S5: begin 	
 					ss_tready_temp <= 1'b0; 
 					sm_tvalid_temp <= 1'b1;
 					data_WE_temp <= 4'h0; 
 					data_EN_temp <= 1'b0;
-					data_A_temp <= 12'b0;
+					data_A_temp <= 12'hfff;
 				end
 			default: begin	
 					ss_tready_temp <= 1'b0; 
