@@ -29,7 +29,7 @@ module address_gen
 	output  wire	[3:0]				 i_o,
 	
 	input wire  [(pADDR_WIDTH-1):0]	 fir_start_address,
-	//output wire [9:0]				 counter,
+	output wire [9:0]				 counter,
 	
 	output wire [(pADDR_WIDTH-1):0]	 tap_addr_r,
 	output wire [(pADDR_WIDTH-1):0]  fir_addr_r 
@@ -39,7 +39,7 @@ begin
 	reg [2:0] state;
 	reg [3:0] i;
 	assign state_o = state;
-	//reg [9:0]				 counter_temp;
+	reg [9:0]				 counter_temp;
 	reg mac_reset_temp;
 	reg sm_fready_temp;
 	reg mac_EN_temp;
@@ -109,7 +109,7 @@ begin
 			S1: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; end
 			S2: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b1; mac_EN_temp <= 1'b0; end
 			S3: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b1; end
-				//counter = counter + 10'b1; end
+				
 			S4: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; 
 						tap_addr_r_temp <= (tap_addr_r_temp < 12'h028) ? (tap_addr_r_temp + 12'h4) : 12'h0;
 						fir_addr_r_temp <= (fir_addr_r_temp == 12'h000) ? 12'h028 : (fir_addr_r_temp - 12'h4);
@@ -117,10 +117,12 @@ begin
 				end
 			S5: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b1; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
 						//fir_start_address <= (fir_start_address < 12'h028) ? (fir_start_address + 12'h4) : 12'h0;
+						counter_temp <= counter_temp + 10'b1;
 				end
 			S6: begin mac_reset_temp <= 1'b1; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
 				tap_addr_r_temp <= 12'h00; 
 				fir_addr_r_temp <= 12'h00;
+				counter_temp <= 10'b0;
 				i <= 4'h0;
 				//fir_start_address <= 12'h0;
 				end
@@ -136,6 +138,6 @@ begin
 	assign i_o = i;
 	assign sm_fready = sm_fready_temp;
 	assign mac_EN = mac_EN_temp;
-	//assign counter_o = counter_temp;
+	assign counter = counter_temp;
 end
 endmodule

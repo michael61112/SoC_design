@@ -23,7 +23,7 @@ module axi4lite_read
 	input   wire                     rready,
 
 	// config_write Feedback
-	output  wire [(pADDR_WIDTH-1):0]  config_read_address,
+	output  wire [(pADDR_WIDTH-1):0]  config_read_address
 	//input   wire  [(pDATA_WIDTH-1):0] config_read_data
 );
 begin // AXI4-Lite Read Transaction

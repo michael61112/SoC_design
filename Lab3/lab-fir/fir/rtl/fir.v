@@ -35,6 +35,10 @@ module fir
 	output  [(pDATA_WIDTH-1):0]				 sm_fdata_o,
 	
 	output wire						mac_EN_o,
+	output wire						ap_start_o,
+	output wire						ap_done_o,
+	output wire						ap_idle_o,
+	output wire	[9:0]					counter_o,
 	
 	
 	// Write Address Channel
@@ -85,7 +89,9 @@ module fir
 );
 begin
 
-
+assign ap_start_o = ap_start;
+assign ap_done_o = ap_done;
+assign ap_idle_o = ap_idle;
 /*
 WE = AW valid & wvalid
 awready = @WE @clk
@@ -170,13 +176,13 @@ reg ap_done = 1'b0;
 reg ap_idle = 1'b0;
 reg [31:0] data_length = 32'b0;
 
-always@(*) begin
+always@(posedge axis_clk) begin
 
 	if (~axis_rst_n) begin
 		ap_start <= 1'b0;
 		ap_done <= 1'b0;
 		ap_idle <= 1'b1;
-		counter <= 10'b0;
+		
 		fir_start =  1'b0;
 	end
 	else begin
@@ -200,8 +206,8 @@ always@(*) begin
 
 		data_length = ((config_write_address == 12'h10) & (wvalid & wready)) ? wdata : data_length;
 
-		if (counter == data_length) begin
-			ap_done <= 1'b0;
+		if ((counter == data_length) && sm_tvalid) begin
+			ap_done <= 1'b1;
 			ap_idle <= 1'b1;
 			fir_start <= 1'b0;
 		end
@@ -330,7 +336,7 @@ wire					mac_reset;
 wire					result_ready;
 
 
-reg [9:0]			counter;
+wire [9:0]			counter;
 reg [31:0]	A;
 reg [31:0] B;
 
@@ -356,7 +362,7 @@ mac mac1(
 	.B(sm_fdata),
 	.result(result_Y)
 );
-
+assign counter_o = counter;
 assign fir_start_address_o = last_addr_w;
 address_gen address_gen1(
 	.axis_clk(axis_clk),
@@ -375,7 +381,7 @@ address_gen address_gen1(
 	.result_ready(result_ready),
 	.mac_EN(mac_EN),
 	.i_o(i_o),
-	//.counter(counter),
+	.counter(counter),
 	.fir_start_address(fir_start_address_o),
 	
 	.tap_addr_r(tap_addr_r),

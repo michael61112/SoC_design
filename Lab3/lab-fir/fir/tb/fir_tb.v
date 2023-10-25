@@ -38,6 +38,10 @@ module fir_tb
 	wire [(pADDR_WIDTH-1):0]       addr_w_o;
 	wire [(pADDR_WIDTH-1):0]       tb_A_o;
 	wire [(pADDR_WIDTH-1):0]       fir_start_address_o;
+	wire ap_start_o;
+	wire ap_done_o;
+	wire ap_idle_o;
+	wire [9:0] counter_o;
 	
 	wire [(pDATA_WIDTH-1):0] sm_fdata_o;
 	wire [(pDATA_WIDTH-1):0] A_o;
@@ -117,6 +121,10 @@ module fir_tb
 		.addr_r_o(addr_r_o),
 		.addr_w_o(addr_w_o),
 		.tb_A_o(tb_A_o),
+		.ap_start_o(ap_start_o),
+		.ap_done_o(ap_done_o),
+		.ap_idle_o(ap_idle_o),
+		.counter_o(counter_o),
 		.fir_start_address_o(fir_start_address_o),
 		
 		.fir_start_o(fir_start_o),
@@ -229,7 +237,7 @@ module fir_tb
 
 
     // Prevent hang
-    integer timeout = (3000000); //1000000
+    integer timeout = (4000000); //1000000
     initial begin
         while(timeout > 0) begin
             @(posedge axis_clk);
@@ -313,13 +321,16 @@ module fir_tb
         @(posedge axis_clk); @(posedge axis_clk);
         axis_rst_n = 1;
 		
-		
+		start_count = 1;
 		$display("----Start the data input(AXI-Stream)----");
-        for(i=0;i< (data_length-1);i=i+1) begin //(data_length-1)
+        for(i=0;i< data_length;i=i+1) begin //(data_length-1)
 			ss(Din_list[i]);
 			//sm(Din_list[i],i);
 			sm(golden_list[i],i);
         end
+		start_count = 0;
+		$display("FIR spend %d cycle", clk_counter);
+		
 		/*
         ss_tlast = 1;
 		ss(Din_list[(Data_Num-1)]);
@@ -333,7 +344,14 @@ module fir_tb
         end
 		*/
     end
-
+integer clk_counter = 0;
+integer start_count = 0;
+always@(posedge axis_clk) begin
+	if(start_count) begin
+		clk_counter = clk_counter + 1;
+	end
+end
+		
 // Step5: When ap_done is sampled, compare Yn with golden data
 //  TB Receive golden_list from FIR by stream
     integer k;
