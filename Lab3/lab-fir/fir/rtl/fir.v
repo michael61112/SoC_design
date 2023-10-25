@@ -89,9 +89,7 @@ module fir
 );
 begin
 
-assign ap_start_o = ap_start;
-assign ap_done_o = ap_done;
-assign ap_idle_o = ap_idle;
+
 /*
 WE = AW valid & wvalid
 awready = @WE @clk
@@ -171,22 +169,43 @@ data_ram_axi4stream data_ram_axi4stream1(
 );
 
 
-reg ap_start = 1'b0;
-reg ap_done = 1'b0;
-reg ap_idle = 1'b0;
+wire 	ap_start;
+wire 	ap_done;
+wire 	ap_idle;
+wire	fir_start;
 reg [31:0] data_length = 32'b0;
 
+ap_fsm ap_fsm1(
+	.axis_clk(axis_clk),
+	.axis_rst_n(axis_rst_n),
+    .config_write_address(config_write_address),
+    .config_write_data(config_write_data),
+	.counter(counter),
+	.data_length(data_length),
+	.sm_tvalid(sm_tvalid),
+	.ap_start(ap_start),
+	.ap_done(ap_done),
+	.ap_idle(ap_idle),
+	.fir_start(fir_start)
+);
+always@(posedge axis_clk) begin
+	data_length = ((config_write_address == 12'h10) & (wvalid & wready)) ? wdata : data_length;
+end
+
+assign ap_start_o = ap_start;
+assign ap_done_o = ap_done;
+assign ap_idle_o = ap_idle;
+/*
 always@(posedge axis_clk) begin
 
 	if (~axis_rst_n) begin
 		ap_start <= 1'b0;
 		ap_done <= 1'b0;
 		ap_idle <= 1'b1;
-		
-		fir_start =  1'b0;
+		fir_start <=  1'b0;
 	end
 	else begin
-		if (config_write_address == 12'h00) begin
+		if ((config_write_address == 12'h00) & (~ap_start)) begin
 			if (config_write_data & 32'b1) begin
 				ap_start <= 1'b1;
 				ap_idle <= 1'b0;
@@ -213,6 +232,7 @@ always@(posedge axis_clk) begin
 		end
 	end
 end
+*/
 	// [ap_start]
 	// set by software/ testbench
 	// reset by engine when start data transfer
@@ -330,7 +350,7 @@ assign tb_A_o = tb_A;
 ///////////////////////////////////////////////////////////////////////////
 
 wire [31:0]			result_Y;
-reg 				fir_start;
+
 
 wire					mac_reset;
 wire					result_ready;
