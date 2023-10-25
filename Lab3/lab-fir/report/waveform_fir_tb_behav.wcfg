@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="fir_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="fir_tb" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="600.000001 us"></ZoomEndTime>
+      <Cursor1Time time="367.915000 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="257"></NameColumnWidth>
+      <ValueColumnWidth column_width="76"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="79" />
+   <wave_markers>
+      <marker time="1915000" label="" />
+   </wave_markers>
+   <wvobject fp_name="/fir_tb/axis_clk" type="logic">
+      <obj_property name="ElementShortName">axis_clk</obj_property>
+      <obj_property name="ObjectShortName">axis_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/axis_rst_n" type="logic">
+      <obj_property name="ElementShortName">axis_rst_n</obj_property>
+      <obj_property name="ObjectShortName">axis_rst_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/state_w" type="array">
+      <obj_property name="ElementShortName">state_w[1:0]</obj_property>
+      <obj_property name="ObjectShortName">state_w[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/state_r" type="array">
+      <obj_property name="ElementShortName">state_r[1:0]</obj_property>
+      <obj_property name="ObjectShortName">state_r[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/state_data_ram" type="array">
+      <obj_property name="ElementShortName">state_data_ram[2:0]</obj_property>
+      <obj_property name="ObjectShortName">state_data_ram[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/last_state_o" type="array">
+      <obj_property name="ElementShortName">last_state_o[2:0]</obj_property>
+      <obj_property name="ObjectShortName">last_state_o[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/status_address_gen_o" type="array">
+      <obj_property name="ElementShortName">status_address_gen_o[2:0]</obj_property>
+      <obj_property name="ObjectShortName">status_address_gen_o[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/addr_r_o" type="array">
+      <obj_property name="ElementShortName">addr_r_o[11:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_r_o[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/addr_w_o" type="array">
+      <obj_property name="ElementShortName">addr_w_o[11:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_w_o[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tb_A_o" type="array">
+      <obj_property name="ElementShortName">tb_A_o[11:0]</obj_property>
+      <obj_property name="ObjectShortName">tb_A_o[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/fir_start_address_o" type="array">
+      <obj_property name="ElementShortName">fir_start_address_o[11:0]</obj_property>
+      <obj_property name="ObjectShortName">fir_start_address_o[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ap_start_o" type="logic">
+      <obj_property name="ElementShortName">ap_start_o</obj_property>
+      <obj_property name="ObjectShortName">ap_start_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ap_done_o" type="logic">
+      <obj_property name="ElementShortName">ap_done_o</obj_property>
+      <obj_property name="ObjectShortName">ap_done_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ap_idle_o" type="logic">
+      <obj_property name="ElementShortName">ap_idle_o</obj_property>
+      <obj_property name="ObjectShortName">ap_idle_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/counter_o" type="array">
+      <obj_property name="ElementShortName">counter_o[9:0]</obj_property>
+      <obj_property name="ObjectShortName">counter_o[9:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/sm_fdata_o" type="array">
+      <obj_property name="ElementShortName">sm_fdata_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">sm_fdata_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/A_o" type="array">
+      <obj_property name="ElementShortName">A_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">A_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/B_o" type="array">
+      <obj_property name="ElementShortName">B_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">B_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/result_Y_o" type="array">
+      <obj_property name="ElementShortName">result_Y_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result_Y_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/out_adress" type="array">
+      <obj_property name="ElementShortName">out_adress[11:0]</obj_property>
+      <obj_property name="ObjectShortName">out_adress[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/out_data" type="array">
+      <obj_property name="ElementShortName">out_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">out_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/rdata_in_debug" type="array">
+      <obj_property name="ElementShortName">rdata_in_debug[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata_in_debug[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/fir_start_o" type="logic">
+      <obj_property name="ElementShortName">fir_start_o</obj_property>
+      <obj_property name="ObjectShortName">fir_start_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/mac_reset_o" type="logic">
+      <obj_property name="ElementShortName">mac_reset_o</obj_property>
+      <obj_property name="ObjectShortName">mac_reset_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/result_ready_o" type="logic">
+      <obj_property name="ElementShortName">result_ready_o</obj_property>
+      <obj_property name="ObjectShortName">result_ready_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/i_o" type="array">
+      <obj_property name="ElementShortName">i_o[3:0]</obj_property>
+      <obj_property name="ObjectShortName">i_o[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/mac_EN_o" type="logic">
+      <obj_property name="ElementShortName">mac_EN_o</obj_property>
+      <obj_property name="ObjectShortName">mac_EN_o</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/awaddr" type="array">
+      <obj_property name="ElementShortName">awaddr[11:0]</obj_property>
+      <obj_property name="ObjectShortName">awaddr[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/awvalid" type="logic">
+      <obj_property name="ElementShortName">awvalid</obj_property>
+      <obj_property name="ObjectShortName">awvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/awready" type="logic">
+      <obj_property name="ElementShortName">awready</obj_property>
+      <obj_property name="ObjectShortName">awready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/wvalid" type="logic">
+      <obj_property name="ElementShortName">wvalid</obj_property>
+      <obj_property name="ObjectShortName">wvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/wready" type="logic">
+      <obj_property name="ElementShortName">wready</obj_property>
+      <obj_property name="ObjectShortName">wready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/wdata" type="array">
+      <obj_property name="ElementShortName">wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/araddr" type="array">
+      <obj_property name="ElementShortName">araddr[11:0]</obj_property>
+      <obj_property name="ObjectShortName">araddr[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/arvalid" type="logic">
+      <obj_property name="ElementShortName">arvalid</obj_property>
+      <obj_property name="ObjectShortName">arvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/arready" type="logic">
+      <obj_property name="ElementShortName">arready</obj_property>
+      <obj_property name="ObjectShortName">arready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/rvalid" type="logic">
+      <obj_property name="ElementShortName">rvalid</obj_property>
+      <obj_property name="ObjectShortName">rvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/rready" type="logic">
+      <obj_property name="ElementShortName">rready</obj_property>
+      <obj_property name="ObjectShortName">rready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/rdata" type="array">
+      <obj_property name="ElementShortName">rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ss_tdata" type="array">
+      <obj_property name="ElementShortName">ss_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ss_tdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ss_tready" type="logic">
+      <obj_property name="ElementShortName">ss_tready</obj_property>
+      <obj_property name="ObjectShortName">ss_tready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ss_tvalid" type="logic">
+      <obj_property name="ElementShortName">ss_tvalid</obj_property>
+      <obj_property name="ObjectShortName">ss_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/ss_tlast" type="logic">
+      <obj_property name="ElementShortName">ss_tlast</obj_property>
+      <obj_property name="ObjectShortName">ss_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/sm_tdata" type="array">
+      <obj_property name="ElementShortName">sm_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">sm_tdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/sm_tready" type="logic">
+      <obj_property name="ElementShortName">sm_tready</obj_property>
+      <obj_property name="ObjectShortName">sm_tready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/sm_tvalid" type="logic">
+      <obj_property name="ElementShortName">sm_tvalid</obj_property>
+      <obj_property name="ObjectShortName">sm_tvalid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/sm_tlast" type="logic">
+      <obj_property name="ElementShortName">sm_tlast</obj_property>
+      <obj_property name="ObjectShortName">sm_tlast</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tap_WE" type="array">
+      <obj_property name="ElementShortName">tap_WE[3:0]</obj_property>
+      <obj_property name="ObjectShortName">tap_WE[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tap_EN" type="logic">
+      <obj_property name="ElementShortName">tap_EN</obj_property>
+      <obj_property name="ObjectShortName">tap_EN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tap_Di" type="array">
+      <obj_property name="ElementShortName">tap_Di[31:0]</obj_property>
+      <obj_property name="ObjectShortName">tap_Di[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tap_A" type="array">
+      <obj_property name="ElementShortName">tap_A[11:0]</obj_property>
+      <obj_property name="ObjectShortName">tap_A[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/tap_Do" type="array">
+      <obj_property name="ElementShortName">tap_Do[31:0]</obj_property>
+      <obj_property name="ObjectShortName">tap_Do[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_WE" type="array">
+      <obj_property name="ElementShortName">data_WE[3:0]</obj_property>
+      <obj_property name="ObjectShortName">data_WE[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_EN" type="logic">
+      <obj_property name="ElementShortName">data_EN</obj_property>
+      <obj_property name="ObjectShortName">data_EN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_Di" type="array">
+      <obj_property name="ElementShortName">data_Di[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_Di[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_A" type="array">
+      <obj_property name="ElementShortName">data_A[11:0]</obj_property>
+      <obj_property name="ObjectShortName">data_A[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_Do" type="array">
+      <obj_property name="ElementShortName">data_Do[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_Do[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/Din_list" type="array">
+      <obj_property name="ElementShortName">Din_list[0:599][31:0]</obj_property>
+      <obj_property name="ObjectShortName">Din_list[0:599][31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/golden_list" type="array">
+      <obj_property name="ElementShortName">golden_list[0:599][31:0]</obj_property>
+      <obj_property name="ObjectShortName">golden_list[0:599][31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/data_length" type="array">
+      <obj_property name="ElementShortName">data_length[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_length[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/Din" type="array">
+      <obj_property name="ElementShortName">Din[31:0]</obj_property>
+      <obj_property name="ObjectShortName">Din[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/golden" type="array">
+      <obj_property name="ElementShortName">golden[31:0]</obj_property>
+      <obj_property name="ObjectShortName">golden[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/input_data" type="array">
+      <obj_property name="ElementShortName">input_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">input_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/golden_data" type="array">
+      <obj_property name="ElementShortName">golden_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">golden_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/m" type="array">
+      <obj_property name="ElementShortName">m[31:0]</obj_property>
+      <obj_property name="ObjectShortName">m[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/i" type="array">
+      <obj_property name="ElementShortName">i[31:0]</obj_property>
+      <obj_property name="ObjectShortName">i[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/timeout" type="array">
+      <obj_property name="ElementShortName">timeout[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timeout[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/coef" type="array">
+      <obj_property name="ElementShortName">coef[0:10][31:0]</obj_property>
+      <obj_property name="ObjectShortName">coef[0:10][31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/error_coef" type="logic">
+      <obj_property name="ElementShortName">error_coef</obj_property>
+      <obj_property name="ObjectShortName">error_coef</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/clk_counter" type="array">
+      <obj_property name="ElementShortName">clk_counter[31:0]</obj_property>
+      <obj_property name="ObjectShortName">clk_counter[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/start_count" type="array">
+      <obj_property name="ElementShortName">start_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">start_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/k" type="array">
+      <obj_property name="ElementShortName">k[31:0]</obj_property>
+      <obj_property name="ObjectShortName">k[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/error" type="logic">
+      <obj_property name="ElementShortName">error</obj_property>
+      <obj_property name="ObjectShortName">error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/status_error" type="logic">
+      <obj_property name="ElementShortName">status_error</obj_property>
+      <obj_property name="ObjectShortName">status_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/rdata_in" type="array">
+      <obj_property name="ElementShortName">rdata_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/pADDR_WIDTH" type="array">
+      <obj_property name="ElementShortName">pADDR_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pADDR_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/pDATA_WIDTH" type="array">
+      <obj_property name="ElementShortName">pDATA_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pDATA_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/Tape_Num" type="array">
+      <obj_property name="ElementShortName">Tape_Num[31:0]</obj_property>
+      <obj_property name="ObjectShortName">Tape_Num[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fir_tb/Data_Num" type="array">
+      <obj_property name="ElementShortName">Data_Num[31:0]</obj_property>
+      <obj_property name="ObjectShortName">Data_Num[31:0]</obj_property>
+   </wvobject>
+</wave_config>
