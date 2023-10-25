@@ -7,7 +7,8 @@ module fir
 	parameter S2 = 3'b010, // TB read
 	parameter S3 = 3'b011, // FIR read
 	parameter S4 = 3'b100, // R/W Done
-	parameter S5 = 3'b101  // Send result
+	parameter S5 = 3'b101, // Send result
+	parameter S6 = 3'b110  // Reset
 )
 (
 	// Global Signals 
@@ -23,7 +24,7 @@ module fir
 	output [(pADDR_WIDTH-1):0]       addr_r_o,
 	output [(pADDR_WIDTH-1):0]       addr_w_o,
 	output [(pADDR_WIDTH-1):0]       tb_A_o,
-	
+	output [(pADDR_WIDTH-1):0] fir_start_address_o,
 	output  wire  					 fir_start_o,
 	output  wire  					 mac_reset_o,
 	output  wire  					 result_ready_o,
@@ -32,6 +33,7 @@ module fir
 	output  [(pDATA_WIDTH-1):0]				 B_o,
 	output  [(pDATA_WIDTH-1):0]				 result_Y_o,
 	output  [(pDATA_WIDTH-1):0]				 sm_fdata_o,
+	
 	output wire						mac_EN_o,
 	
 	
@@ -229,7 +231,7 @@ end
 				*/	
 	assign tap_A = (!tap_EN) ? 12'b0 :
 					(&tap_WE) ? {6'b0, config_write_address[5:0]} : 
-					(fir_start) ? data_A : {6'b0, config_read_address[5:0]};				//fir_addr_r
+					(fir_start) ? tap_addr_r : {6'b0, config_read_address[5:0]};				//fir_addr_r
 
 					
 					
@@ -244,6 +246,7 @@ end
 // Address Generater
 reg [(pADDR_WIDTH-1):0] addr_w;
 reg [(pADDR_WIDTH-1):0] addr_r;
+reg [(pADDR_WIDTH-1):0] last_addr_w;
 wire [(pADDR_WIDTH-1):0]		tap_addr_r;
 wire [(pADDR_WIDTH-1):0] fir_addr_r;
 
@@ -265,14 +268,16 @@ always@(posedge axis_clk) begin
 	if (~axis_rst_n) begin
 		addr_w <= 12'h0;
 		addr_r <= 12'h0;
+		last_addr_w <= 12'h0;
 		//fir_addr_r <= 12'h0;
 		
 		//tap_A_temp <= 12'b0;
 	end
 	else begin
 		// Data address assignment
-		if ((state_data_ram == S0) && (last_state == S1)) begin
+		if (state_data_ram == S1) begin //(state_data_ram == S0) && (last_state == S1)
 			addr_w <= (addr_w < 12'h028) ? (addr_w + 12'h4) : 12'h0;
+			last_addr_w <= addr_w;
 		end
 		
 		else if ((state_data_ram == S0) && (last_state == S2)) begin
@@ -352,6 +357,7 @@ mac mac1(
 	.result(result_Y)
 );
 
+assign fir_start_address_o = last_addr_w;
 address_gen address_gen1(
 	.axis_clk(axis_clk),
 	.axis_rst_n(axis_rst_n),
@@ -359,6 +365,7 @@ address_gen address_gen1(
 	.state_data_ram(state_data_ram),
 	.last_state(last_state),
 	.fir_start(fir_start),
+	
 	
 	
 	.sm_fready(sm_fready),
@@ -369,6 +376,7 @@ address_gen address_gen1(
 	.mac_EN(mac_EN),
 	.i_o(i_o),
 	//.counter(counter),
+	.fir_start_address(fir_start_address_o),
 	
 	.tap_addr_r(tap_addr_r),
 	.fir_addr_r(fir_addr_r) 

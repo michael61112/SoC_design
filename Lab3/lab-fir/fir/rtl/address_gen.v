@@ -6,7 +6,8 @@ module address_gen
 	parameter S2 = 3'b010, // TB read
 	parameter S3 = 3'b011, // FIR read
 	parameter S4 = 3'b100, // R/W Done
-	parameter S5 = 3'b101  // Send result
+	parameter S5 = 3'b101, // Send result
+	parameter S6 = 3'b110  // Reset
 )
 (
 	// Global Signals 
@@ -21,11 +22,13 @@ module address_gen
 	input  wire                      sm_fready,
 	input  wire                      sm_fvalid,
 	
+	
     output wire                     mac_reset,
 	output wire 					result_ready,
 	output wire 					mac_EN,
 	output  wire	[3:0]				 i_o,
 	
+	input wire  [(pADDR_WIDTH-1):0]	 fir_start_address,
 	//output wire [9:0]				 counter,
 	
 	output wire [(pADDR_WIDTH-1):0]	 tap_addr_r,
@@ -43,18 +46,24 @@ begin
 	reg result_ready_temp;
 	reg [(pADDR_WIDTH-1):0]		 tap_addr_r_temp;
 	reg [(pADDR_WIDTH-1):0] 		 fir_addr_r_temp; 
+	//reg [(pADDR_WIDTH-1):0] 		 fir_start_address;
 	
 	always@(negedge axis_clk) begin
 		if (!axis_rst_n) begin
-			state <= S0;
+			state <= S6;
 		end else begin
 			case(state)
 				S0: begin
-					if (last_state == S1 && fir_start) begin
-						state <= S1;
+					if (fir_start) begin
+						if (last_state == S1) begin
+							state <= S1;
+						end
+						else begin
+							state <= S0;
+						end
 					end
 					else begin
-						state <= S0;
+						state <= S6;
 					end
 				end
 				S1: begin
@@ -94,7 +103,7 @@ begin
 		case(state)
 			S0: begin mac_reset_temp <= 1'b1; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
 				tap_addr_r_temp <= 12'h00; 
-				fir_addr_r_temp <= 12'h00;
+				fir_addr_r_temp <= fir_start_address;
 				i <= 4'h0;
 				end
 			S1: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; end
@@ -103,10 +112,18 @@ begin
 				//counter = counter + 10'b1; end
 			S4: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; 
 						tap_addr_r_temp <= (tap_addr_r_temp < 12'h028) ? (tap_addr_r_temp + 12'h4) : 12'h0;
-						fir_addr_r_temp <= (fir_addr_r_temp < 12'h028) ? (fir_addr_r_temp + 12'h4) : 12'h0;
+						fir_addr_r_temp <= (fir_addr_r_temp == 12'h000) ? 12'h028 : (fir_addr_r_temp - 12'h4);
 						i <= i + 4'h1;
 				end
-			S5: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b1; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0; end
+			S5: begin mac_reset_temp <= 1'b0; result_ready_temp <= 1'b1; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
+						//fir_start_address <= (fir_start_address < 12'h028) ? (fir_start_address + 12'h4) : 12'h0;
+				end
+			S6: begin mac_reset_temp <= 1'b1; result_ready_temp <= 1'b0; sm_fready_temp <= 1'b0; mac_EN_temp <= 1'b0;
+				tap_addr_r_temp <= 12'h00; 
+				fir_addr_r_temp <= 12'h00;
+				i <= 4'h0;
+				//fir_start_address <= 12'h0;
+				end
 		endcase
 	end
 
