@@ -136,7 +136,7 @@ back_pressure
 		.araddr(araddr),
 		.arready(arready),
 		.arvalid(arvalid),
-		.rdata(rdata),    
+		//.rdata(rdata),    
 		.rvalid(rvalid),
 		.rready(rready),
 		.config_read_address(config_read_address)//,

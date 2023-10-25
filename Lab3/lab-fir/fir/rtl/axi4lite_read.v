@@ -18,7 +18,7 @@ module axi4lite_read
     input   wire                     arvalid,
 	
 	// Read Data Channel
-	output  wire [(pDATA_WIDTH-1):0] rdata,    
+	//output  wire [(pDATA_WIDTH-1):0] rdata,    
 	output  wire                     rvalid,
 	input   wire                     rready,
 
@@ -96,7 +96,7 @@ begin // AXI4-Lite Read Transaction
 
 	assign arready = (arready_temp) ? 1'b1 : 1'b0;
 	assign rvalid = (rvalid_temp) ? 1'b1 : 1'b0;	
-	assign rdata = rdata_temp;
+	//assign rdata = rdata_temp;
 	assign config_read_address = config_read_address_temp;
 	
 	always @(negedge arvalid) begin
