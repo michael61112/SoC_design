@@ -7,6 +7,15 @@
 -v ../../rtl/user/user_proj_example.counter.v
 -v ../../rtl/user/bram.v
 
+## User project -- FIR
+-v ../../rtl/user/fir/address_gen.v
+-v ../../rtl/user/fir/ap_fsm.v
+-v ../../rtl/user/fir/axi4lite_read.v
+-v ../../rtl/user/fir/axi4lite_write.v
+-v ../../rtl/user/fir/data_ram_axi4stream.v
+-v ../../rtl/user/fir/fir.v
+-v ../../rtl/user/fir/mac.v
+
 ## VIP
 -v ../../vip/tbuart.v
 -v ../../vip/spiflash.v
