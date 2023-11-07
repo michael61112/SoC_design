@@ -76,19 +76,45 @@ module user_proj_example #(
     wire [`MPRJ_IO_PADS-1:0] io_out;
     wire [`MPRJ_IO_PADS-1:0] io_oeb;
 
-    
+    reg [3:0] bram_wbs_we; // 4-bit write enable signal
+    wire bram_wbs_ack;
+    wire [31:0] bram_wbs_dat_o;
+    reg wbs_ack_temp; 
+    // Create a 10-cycle delay for wbs_ack_o
+    reg [9:0] ack_delay;
+    always @(posedge wb_clk_i or posedge wb_rst_i) begin
+        if (wb_rst_i) begin
+            ack_delay <= 10'b0;
+        end else if (wbs_cyc_i) begin
+            ack_delay <= ack_delay + 1'b1;
+        end
+
+	if (ack_delay == 10'hb) begin
+		wbs_ack_temp <= 1'b1;
+		ack_delay <= 0;
+	end
+	else begin
+		wbs_ack_temp <= 1'b0;
+	end
+    end
+
+    assign wbs_ack_o = wbs_ack_temp;//(ack_delay == 10'd11) ? 1'b1 : 1'b0;
+    assign wbs_dat_o = bram_wbs_dat_o;
 
     bram user_bram (
-        .CLK(clk),
-        .WE0(),
-        .EN0(),
-        .Di0(),
-        .Do0(),
-        .A0()
+        .CLK(wb_clk_i),
+        .WE0(bram_wbs_we), // Connect to the 4-bit write enable signal
+        .EN0(wbs_cyc_i),
+        .Di0(wbs_dat_i),
+        .Do0(bram_wbs_dat_o),
+        .A0(wbs_adr_i)
     );
 
+    // Generate the 4-bit write enable signal for the BRAM
+    always @(*) begin
+        bram_wbs_we = (wbs_stb_i && wbs_cyc_i && wbs_we_i) ? 4'b1111 : 4'b0;
+    end
+
 endmodule
-
-
 
 `default_nettype wire

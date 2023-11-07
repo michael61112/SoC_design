@@ -157,6 +157,7 @@ module counter_la_fir_tb;
 	initial begin
 		wait(checkbits == 16'hAB40);
 		$display("LA Test 1 started");
+		$monitor("data: %h", checkbits);
 		//wait(checkbits == 16'hAB41);
 
 		//wait(checkbits == 16'd40);
