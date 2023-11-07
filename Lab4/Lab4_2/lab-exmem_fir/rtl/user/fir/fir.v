@@ -170,7 +170,7 @@ data_ram_axi4stream data_ram_axi4stream1(
 
 wire 	ap_start;
 wire 	ap_done;
-wire 	ap_idle;
+//wire 	ap_idle;
 wire	fir_start;
 reg [31:0] data_length = 32'b0;
 
@@ -334,8 +334,8 @@ always@(posedge axis_clk) begin
 	end
 end
 
-wire [(pADDR_WIDTH-1):0] tb_A;
-wire [(pADDR_WIDTH-1):0] fir_A;
+//wire [(pADDR_WIDTH-1):0] tb_A;
+//wire [(pADDR_WIDTH-1):0] fir_A;
 reg [11:0]			tap_A_temp;
 
 assign tb_A = (state_data_ram == S1) ? addr_w : addr_r;
@@ -348,22 +348,22 @@ assign tb_A_o = tb_A;
 
 ///////////////////////////////////////////////////////////////////////////
 
-wire [31:0]			result_Y;
+//wire [31:0]			result_Y;
 
 
 wire					mac_reset;
-wire					result_ready;
+//wire					result_ready;
 
 
-wire [9:0]			counter;
+//wire [9:0]			counter;
 reg [31:0]	A;
 reg [31:0] B;
 
 wire mac_EN;
 
-wire 							sm_fready;
-wire 							sm_fvalid;
-wire 	[(pDATA_WIDTH-1):0]		sm_fdata;
+//wire 							sm_fready;
+//wire 							sm_fvalid;
+//wire 	[(pDATA_WIDTH-1):0]		sm_fdata;
 assign A_o = tap_Do;
 assign B_o = sm_fdata;
 assign result_Y_o = result_Y;
