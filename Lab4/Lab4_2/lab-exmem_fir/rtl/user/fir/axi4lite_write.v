@@ -26,7 +26,6 @@ module axi4lite_write
 	output wire [(pADDR_WIDTH-1):0]  config_write_address,
 	output wire [(pDATA_WIDTH-1):0]  config_write_data
 );
-begin
 	
 	reg [1:0] state;
 	assign state_o = state;
@@ -105,5 +104,4 @@ begin
 	always @(negedge wvalid) begin
 		wready_temp <= 1'b0;
 	end
-end
 endmodule

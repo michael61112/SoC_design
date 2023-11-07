@@ -7,7 +7,6 @@ module mac
 	input [31:0]	B,
 	output [31:0]  result
 );
-begin
 
 	reg [31:0] accumulator;
 
@@ -25,7 +24,6 @@ begin
 	end
 
 	assign result = accumulator;
-end
 endmodule
 
 

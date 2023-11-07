@@ -34,7 +34,6 @@ module address_gen
 	output wire [(pADDR_WIDTH-1):0]	 tap_addr_r,
 	output wire [(pADDR_WIDTH-1):0]  fir_addr_r 
 );
-begin
 	
 	reg [2:0] state;
 	reg [3:0] i;
@@ -139,5 +138,4 @@ begin
 	assign sm_fready = sm_fready_temp;
 	assign mac_EN = mac_EN_temp;
 	assign counter = counter_temp;
-end
 endmodule

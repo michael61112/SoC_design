@@ -87,7 +87,6 @@ module fir
     output  wire [(pADDR_WIDTH-1):0] data_A,
     input   wire [(pDATA_WIDTH-1):0] data_Do
 );
-begin
 
 
 /*
@@ -408,5 +407,4 @@ address_gen address_gen1(
 	.fir_addr_r(fir_addr_r) 
 );
 
-end
 endmodule 

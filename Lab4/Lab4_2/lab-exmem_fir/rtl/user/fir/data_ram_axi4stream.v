@@ -35,7 +35,6 @@ module data_ram_axi4stream
 	input  							result_ready,
 	input	[(pDATA_WIDTH-1):0]		result_Y
 );
-begin
 
 	reg [2:0] 					state;
 	reg 						ss_tready_temp;
@@ -181,7 +180,6 @@ begin
 	assign sm_fdata = data_Do;//sm_fdata_temp;
 	assign state_o = state;
 	
-end
 endmodule
 
 

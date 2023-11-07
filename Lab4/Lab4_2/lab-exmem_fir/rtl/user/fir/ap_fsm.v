@@ -23,7 +23,6 @@ module ap_fsm
 	output	wire						ap_idle,
 	output	wire						fir_start
 );
-begin // AXI4-Lite Read Transaction
 	
 	reg [1:0] state;
 	//assign state_o = state;
@@ -83,5 +82,4 @@ begin // AXI4-Lite Read Transaction
 	assign fir_start = fir_start_temp;
 
 	
-end
 endmodule

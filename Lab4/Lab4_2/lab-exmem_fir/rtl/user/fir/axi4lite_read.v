@@ -26,7 +26,6 @@ module axi4lite_read
 	output  wire [(pADDR_WIDTH-1):0]  config_read_address
 	//input   wire  [(pDATA_WIDTH-1):0] config_read_data
 );
-begin // AXI4-Lite Read Transaction
 	
 	reg [1:0] state;
 	assign state_o = state;
@@ -107,5 +106,4 @@ begin // AXI4-Lite Read Transaction
 		rvalid_temp <= 1'b0;
 	end
 	
-end
 endmodule
