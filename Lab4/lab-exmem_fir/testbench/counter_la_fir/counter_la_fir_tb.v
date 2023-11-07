@@ -27,7 +27,8 @@ module counter_la_fir_tb;
 	wire gpio;
 	wire uart_tx;
 	wire [37:0] mprj_io;
-	wire [15:0] checkbits;
+	wire signed [15:0] checkbits;
+	reg [15:0] pre_checkbits;
 
 	assign checkbits  = mprj_io[31:16];
 	assign uart_tx = mprj_io[6];
@@ -153,11 +154,25 @@ module counter_la_fir_tb;
 		$display("%c[0m",27);
 		$finish;
 	end
-
+	integer i = 0 ;
 	initial begin
-		wait(checkbits == 16'hAB40);
-		$display("LA Test 1 started");
-		$monitor("data: %h", checkbits);
+		pre_checkbits = 0 ;
+		
+		while (1) begin
+			wait(checkbits != pre_checkbits);
+        		$display("%d mprj: D data = %d	H data = %h", i,checkbits,checkbits);
+			i = i + 1 ;
+			pre_checkbits = checkbits;
+			if (checkbits == 16'hAB51) begin
+			$display("LA Test 2 passed");
+			#10000;
+			$finish;
+			end else if (checkbits == 16'hAB40) begin
+				$display("LA Test 1 started");
+			end
+		end
+		
+
 		//wait(checkbits == 16'hAB41);
 
 		//wait(checkbits == 16'd40);
@@ -169,10 +184,6 @@ module counter_la_fir_tb;
 		//wait(checkbits == 16'd2669);
 		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
 
-		wait(checkbits == 16'hAB51);
-		$display("LA Test 2 passed");
-		#10000;
-		$finish;
 	end
 
 	initial begin
