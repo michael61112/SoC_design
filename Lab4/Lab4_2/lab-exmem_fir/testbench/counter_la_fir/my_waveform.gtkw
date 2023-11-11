@@ -1,0 +1,36 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Sat Nov 11 10:11:13 2023
+[*]
+[dumpfile] "/home/ubuntu/Desktop/project/SoC_design/Lab4/Lab4_2/lab-exmem_fir/testbench/counter_la_fir/counter_la_fir.vcd"
+[dumpfile_mtime] "Fri Nov 10 16:12:43 2023"
+[dumpfile_size] 101460888
+[savefile] "/home/ubuntu/Desktop/project/SoC_design/Lab4/Lab4_2/lab-exmem_fir/testbench/counter_la_fir/my_waveform.gtkw"
+[timestart] 0
+[size] 1848 1023
+[pos] -51 -51
+*-21.129704 2000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] counter_la_fir_tb.
+[treeopen] counter_la_fir_tb.uut.
+[treeopen] counter_la_fir_tb.uut.user_project_wrapper_mprj.mprj.
+[sst_width] 233
+[signals_width] 228
+[sst_expanded] 1
+[sst_vpaned_height] 281
+@28
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wb_clk_i
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wb_rst_i
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_ack_o
+@22
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_adr_i[31:0]
+@28
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_cyc_i
+@22
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_dat_i[31:0]
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_dat_o[31:0]
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_sel_i[3:0]
+@28
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_stb_i
+counter_la_fir_tb.uut.user_project_wrapper_mprj.wbs_we_i
+[pattern_trace] 1
+[pattern_trace] 0

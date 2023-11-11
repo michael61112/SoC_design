@@ -73,7 +73,7 @@ module user_project_wrapper #(
 
     // Independent clock (on independent integer divider)
     input   user_clock2,
-
+output reg user_project_signal,
     // User maskable interrupt signals
     output [2:0] user_irq
 );
@@ -93,14 +93,14 @@ user_proj_example mprj (
 
     // MGMT SoC Wishbone Slave
 
-    .wbs_cyc_i(wbs_cyc_i),
-    .wbs_stb_i(wbs_stb_i),
-    .wbs_we_i(wbs_we_i),
-    .wbs_sel_i(wbs_sel_i),
+    .wbs_cyc_i(wbs_cyc_mem_i),
+    .wbs_stb_i(wbs_stb_mem_i),
+    .wbs_we_i(wbs_we_mem_i),
+    .wbs_sel_i(wbs_sel_mem_i),
     .wbs_adr_i(wbs_adr_i),
-    .wbs_dat_i(wbs_dat_i),
-    .wbs_ack_o(wbs_ack_o),
-    .wbs_dat_o(wbs_dat_o),
+    .wbs_dat_i(wbs_dat_mem_i),
+    .wbs_ack_o(wbs_ack_mem_o),
+    .wbs_dat_o(wbs_dat_mem_o),
 
     // Logic Analyzer
 
@@ -117,6 +117,86 @@ user_proj_example mprj (
     // IRQ
     .irq(user_irq)
 );
+/*
+hw_fir hw_fir (
+
+    .wb_clk_i(wb_clk_i),
+    .wb_rst_i(wb_rst_i),
+
+    // MGMT SoC Wishbone Slave
+
+    .wbs_cyc_i(user_project_fir_cyc),
+    .wbs_stb_i(wbs_stb_i),
+    .wbs_we_i(wbs_we_i),
+    .wbs_sel_i(wbs_sel_i),
+    .wbs_adr_i(wbs_adr_i),
+    .wbs_dat_i(wbs_dat_i),
+    .wbs_ack_o(wbs_ack_o),
+    .wbs_dat_o(wbs_dat_o)
+
+);
+*/
+wire wbs_cyc_mem_i;
+wire wbs_stb_mem_i;
+wire wbs_we_mem_i;
+wire [3:0] wbs_sel_mem_i;
+wire [31:0] wbs_dat_mem_i;
+wire wbs_ack_mem_o;
+wire [31:0] wbs_dat_mem_o;
+
+wire wbs_cyc_fir_i;
+wire wbs_stb_fir_i;
+wire wbs_we_fir_i;
+wire [3:0] wbs_sel_fir_i;
+wire [31:0] wbs_dat_fir_i;
+wire wbs_ack_fir_o;
+wire [31:0] wbs_dat_fir_o;
+
+assign wbs_cyc_mem_i = ((wbs_adr_i & 32'hffff0000) == 32'h38000000)? wbs_cyc_i : 1'b0;
+assign wbs_stb_mem_i = ((wbs_adr_i & 32'hffff0000) == 32'h38000000)? wbs_stb_i : 1'b0;
+assign wbs_we_mem_i = ((wbs_adr_i & 32'hffff0000) == 32'h38000000)? wbs_we_i : 1'b0;
+assign wbs_sel_mem_i = ((wbs_adr_i & 32'hffff0000) == 32'h38000000)? wbs_sel_i : 4'b0;
+assign wbs_dat_mem_i = ((wbs_adr_i & 32'hffff0000) == 32'h38000000)? wbs_dat_i : 1'b0;
+
+
+assign wbs_cyc_fir_i = ((wbs_adr_i & 32'hffff0000) == 32'h30000000)? wbs_cyc_i : 1'b0;
+assign wbs_stb_fir_i = ((wbs_adr_i & 32'hffff0000) == 32'h30000000)? wbs_stb_i : 1'b0;
+assign wbs_we_fir_i = ((wbs_adr_i & 32'hffff0000) == 32'h30000000)? wbs_we_i : 1'b0;
+assign wbs_sel_fir_i = ((wbs_adr_i & 32'hffff0000) == 32'h30000000)? wbs_sel_i : 4'b0;
+assign wbs_dat_fir_i = ((wbs_adr_i & 32'hffff0000) == 32'h30000000)? wbs_dat_i : 1'b0;
+
+assign wbs_ack_o = ((wbs_adr_i & 32'hffff0000) == 32'h38000000) ? wbs_ack_mem_o : ((wbs_adr_i & 32'hffff0000) == 32'h30000000) ? wbs_ack_fir_o : 32'b0;
+assign wbs_dat_o = ((wbs_adr_i & 32'hffff0000) == 32'h38000000) ? wbs_dat_mem_o : ((wbs_adr_i & 32'hffff0000) == 32'h30000000) ? wbs_dat_fir_o : 32'b0;
+
+/*
+always@(posedge wb_clk_i) begin
+	if ((wbs_adr_i & 32'hffff0000) == 32'h38000000) begin
+		user_project_mem_cyc <= wbs_cyc_i;
+		user_project_fir_cyc <= 1'b0;
+	end
+	else if ((wbs_adr_i & 32'hffff0000) == 32'h30000000) begin
+		user_project_mem_cyc <= 1'b0;
+		user_project_fir_cyc <= wbs_cyc_i;
+	end
+	else begin
+		user_project_mem_cyc <= 1'b0;
+		user_project_fir_cyc <= 1'b0;
+	end
+end
+*/
+
+
+//reg user_project_signal;
+always@(posedge wb_clk_i) begin
+
+	if ((wbs_adr_i & 32'hffff0000) == 32'h38000000) begin
+		user_project_signal <= 1'b1;
+	end
+	else begin
+		user_project_signal <= 1'b0;
+	end
+end
+
 
 endmodule	// user_project_wrapper
 

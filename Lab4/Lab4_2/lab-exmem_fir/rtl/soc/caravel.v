@@ -608,7 +608,7 @@ module caravel (
     /* Wrapper module around the user project 		*/
     /*--------------------------------------------------*/
 
-    user_project_wrapper mprj (
+    user_project_wrapper user_project_wrapper_mprj (
         `ifdef USE_POWER_PINS
      .vdda1(vdda1_core), // User area 1 3.3V power
      .vdda2(vdda2_core), // User area 2 3.3V power

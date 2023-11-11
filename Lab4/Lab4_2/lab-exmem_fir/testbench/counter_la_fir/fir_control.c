@@ -18,9 +18,13 @@
 // This include is relative to $CARAVEL_PATH (see Makefile)
 #include <defs.h>
 #include <stub.c>
+#include "fir.h"
 
-extern int* fir();
-
+#define reg_mprj_slave_ap (*(volatile uint32_t*) 0x30000000)
+#define reg_mprj_slave_data_length (*(volatile uint32_t*) 0x30000010)
+#define reg_mprj_slave_tap_param (*(volatile uint32_t*) 0x30000040)
+#define reg_mprj_slave_xn_i (*(volatile uint32_t*) 0x30000080)
+#define reg_mprj_slave_yn_o (*(volatile uint32_t*) 0x30000084)
 // --------------------------------------------------------
 
 /*
@@ -113,35 +117,59 @@ void main()
 	// Flag start of the test 
 	reg_mprj_datal = 0xAB400000;
 
-	// Set Counter value to zero through LA probes [63:32]
-	reg_la1_data = 0x00000000;
+	// check idle = 0
+	while (!((reg_mprj_slave_ap & 0x0000000f) == 0));
+	reg_mprj_datal = 0xAB400001;
 
-	// Configure LA probes from [63:32] as inputs to disable counter write
-	reg_la1_oenb = reg_la1_iena = 0x00000000;    
+	// Write data length
+	reg_mprj_slave_data_length = data_length;
+	reg_mprj_datal = 0xAB400002;
+	
+	// Write Tap Parameter
+	for (int i=0 ; i<N ; i++) {
+	  reg_mprj_slave_tap_param = taps[i];
+	}
+	reg_mprj_datal = 0xAB400003;
 
-/*
-	while (1) {
-		if (reg_la0_data_in > 0x1F4) {
-			reg_mprj_datal = 0xAB410000;
+	// Check Data Length ...
+	if (reg_mprj_slave_data_length == data_length)
+		reg_mprj_datal = 0xAB400004; // data length valid
+	else
+		reg_mprj_datal = 0xAB400005; // data length invalid
+
+
+	// Check Coefficient ...
+	int read_taps[11];
+	bool error_flag = 0;
+	*read_taps = reg_mprj_slave_tap_param;
+	for(int k=0; k < N; k=k+1) {
+		if (read_taps[k] != taps[k]) {
+			error_flag = 1; 
 			break;
 		}
+		else
+			continue;
 	}
-*/	
-	int* tmp = fir();
-	reg_mprj_datal = *tmp << 16;
-	reg_mprj_datal = *(tmp+1) << 16;
-	reg_mprj_datal = *(tmp+2) << 16;
-	reg_mprj_datal = *(tmp+3) << 16;
-	reg_mprj_datal = *(tmp+4) << 16;
-	reg_mprj_datal = *(tmp+5) << 16;
-	reg_mprj_datal = *(tmp+6) << 16;
-	reg_mprj_datal = *(tmp+7) << 16;
-	reg_mprj_datal = *(tmp+8) << 16;
-	reg_mprj_datal = *(tmp+9) << 16;
-	reg_mprj_datal = *(tmp+10) << 16;	
+	if (error_flag)
+		reg_mprj_datal = 0xAB400006; // Check coefficient fail
+	else
+		reg_mprj_datal = 0xAB400007; // Check coefficient pass
 
-	//print("\n");
-	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
+	// Start initial Data BRAM default value(AXI-Stream)
+	for(int i=0;i< 11;i=i+1) { //(data_length-1)
+		reg_mprj_slave_xn_i = 0;
+	}
+	reg_mprj_datal = 0xAB400008;
+
+	// Start FIR
+	reg_mprj_slave_ap = 1;
+	reg_mprj_datal = 0xAB400009;
+
+	// Start the data input(AXI-Stream)
+	for(int i=0;i< data_length;i=i+1) { //(data_length-1)
+		reg_mprj_slave_xn_i = i;
+
+		reg_mprj_datal = reg_mprj_slave_yn_o;
+	}
 	reg_mprj_datal = 0xAB510000;
 }
-

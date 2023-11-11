@@ -28,9 +28,11 @@ module counter_la_fir_tb;
 	wire uart_tx;
 	wire [37:0] mprj_io;
 	wire signed [15:0] checkbits;
+	wire [7:0] stagebits;
 	reg [15:0] pre_checkbits;
 
 	assign checkbits  = mprj_io[31:16];
+	assign stagebits  = mprj_io[7:0];
 	assign uart_tx = mprj_io[6];
 
 	always #12.5 clock <= (clock === 1'b0);
@@ -168,7 +170,27 @@ module counter_la_fir_tb;
 			#10000;
 			$finish;
 			end else if (checkbits == 16'hAB40) begin
-				$display("LA Test 1 started");
+			
+				if (stagebits == 8'h0)	
+					$display("LA Test 1 started");
+				else if  (stagebits == 8'h1)	
+					$display("check idle = 0");
+				else if  (stagebits == 8'h2)	
+					$display("Write data length");
+				else if  (stagebits == 8'h3)	
+					$display("Write Tap Parameter");
+				else if  (stagebits == 8'h4)	
+					$display("Check Data Length valid");
+				else if  (stagebits == 8'h5)	
+					$display("Check Data Length invalid");
+				else if  (stagebits == 8'h6)	
+					$display("Check coefficient fail");
+				else if  (stagebits == 8'h7)	
+					$display("Check coefficient pass");
+				else if  (stagebits == 8'h8)	
+					$display("initial Data BRAM default value");
+				else if  (stagebits == 8'h9)	
+					$display("Start FIR");
 			end
 		end
 		
@@ -252,7 +274,7 @@ module counter_la_fir_tb;
 	);
 
 	spiflash #(
-		.FILENAME("counter_la_fir.hex")
+		.FILENAME("fir_control.hex")
 	) spiflash (
 		.csb(flash_csb),
 		.clk(flash_clk),
