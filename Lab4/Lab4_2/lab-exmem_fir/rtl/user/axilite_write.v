@@ -1,5 +1,6 @@
 module axilite_write
-#(
+#(  	parameter pADDR_WIDTH = 12,
+    	parameter pDATA_WIDTH = 32,
 	parameter S0 = 2'b00,
 	parameter S1 = 2'b01,
 	parameter S2 = 2'b10,
@@ -8,9 +9,8 @@ module axilite_write
 (
 	// Global Signals 
 	input   wire                     	axis_clk,
-	input   wire                     	axis_rst_n,
+	input   wire                     	axilite_w_rst_n,
 	//output  wire [1:0] 			state_o,
-	input	wire				wbs_cyc_i,
 	
 	input   wire				awready,
 	input   wire				wready,
@@ -22,18 +22,18 @@ module axilite_write
 	output	reg  [(pADDR_WIDTH-1):0]	awaddr,
 	output	reg  [(pDATA_WIDTH-1):0]	wdata
 );
-begin // AXI4-Lite Write Transaction
+// AXI4-Lite Write Transaction
 	
 	reg [1:0] state;
 	//assign state_o = state;
 	
 	always@(negedge axis_clk) begin
-		if (!axis_rst_n) begin
+		if (!axilite_w_rst_n) begin
 			state <= S0;
 		end else begin
 			case(state)
 				S0: begin
-					if (axis_rst_n) begin
+					if (axilite_w_rst_n) begin
 						state <= S1;
 					end
 					else begin
@@ -75,6 +75,5 @@ begin // AXI4-Lite Write Transaction
 			S3: begin awvalid <= 1'b0; wvalid <= 1'b1; wdata <= data; end
 		endcase
 	end
-	
-end
+
 endmodule

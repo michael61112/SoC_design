@@ -1,5 +1,6 @@
 module axistream_write
-#(
+#(  	parameter pADDR_WIDTH = 12,
+    	parameter pDATA_WIDTH = 32,
 	parameter S0 = 2'b00,
 	parameter S1 = 2'b01,
 	parameter S2 = 2'b10,
@@ -8,9 +9,8 @@ module axistream_write
 (
 	// Global Signals 
 	input   wire                     	axis_clk,
-	input   wire                     	axis_rst_n,
+	input   wire                     	axirstream_w_rst_n,
 	//output  wire [1:0] 			state_o,
-	input	wire				wbs_cyc_i,
 
 	input   wire				ss_tready,
     	input   wire [(pDATA_WIDTH-1):0] 	data,
@@ -18,18 +18,18 @@ module axistream_write
 	output	reg				ss_tvalid,
 	output	reg  [(pDATA_WIDTH-1):0]	ss_data
 );
-begin // AXI4-Lite Write Transaction
+// AXI4-Stream Write Transaction
 	
 	reg [1:0] state;
 	//assign state_o = state;
 	
 	always@(negedge axis_clk) begin
-		if (!axis_rst_n) begin
+		if (!axirstream_w_rst_n) begin
 			state <= S0;
 		end else begin
 			case(state)
 				S0: begin
-					if (axis_rst_n) begin
+					if (axirstream_w_rst_n) begin
 						state <= S1;
 					end
 					else begin
@@ -37,10 +37,13 @@ begin // AXI4-Lite Write Transaction
 					end
 				end
 				S1: begin
-					if (!awready) begin
+					if (!ss_tready) begin
 						state <= S1;
 					end
-
+					else begin
+						state <= S0;
+					end
+				end
 				default: begin 
 					state <= S0;
 				end
@@ -55,6 +58,5 @@ begin // AXI4-Lite Write Transaction
 			S1: begin ss_tvalid <= 1'b1; ss_data <= data; end
 		endcase
 	end
-	
-end
+
 endmodule

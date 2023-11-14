@@ -32,7 +32,7 @@ module hw_fir(
     end
 
     assign wbs_ack_o = wbs_ack_temp;//(ack_delay == 10'd11) ? 1'b1 : 1'b0;
-    assign wbs_dat_o = 32'hffffffff;
+//    assign wbs_dat_o = 32'hffffffff;
 
 
 always @(*) begin
@@ -40,44 +40,54 @@ always @(*) begin
 end
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-wire [11:0] axilite_addr;
 
+reg axilite_w_rst_n;
+reg axilite_r_rst_n;
+reg axirstream_w_rst_n;
+reg axirstream_r_rst_n;
+
+reg [3:0] state_rst;
 always @(*) begin
-	if (wbs_adr_i[31:24] == 8'h30) begin
-		if (wbs_adr_i[11:0] == 12'h080) begin
-		  if (wbs_we_i) begin
-		    axilite_w_rst_n = 1'b1;
-		    axilite_r_rst_n = 1'b1;
-		    axirstream_w_rst_n = 1'b0;
-		    axirstream_r_rst_n = 1'b1;
-		  end
-		  else begin
-		    axilite_w_rst_n = 1'b1;
-		    axilite_r_rst_n = 1'b1;
-		    axirstream_w_rst_n = 1'b1;
-		    axirstream_r_rst_n = 1'b0;
-		  end
-		end
-		else begin
+	if (wbs_adr_i[31:24] == 'h30) begin //FIR
+		if (wbs_adr_i[7:0] == 'h80) begin //stream  no range
 		  if (wbs_we_i) begin
 		    axilite_w_rst_n = 1'b0;
-		    axilite_r_rst_n = 1'b1;
-		    axirstream_w_rst_n = 1'b1;
-		    axirstream_r_rst_n = 1'b1;
-		  end
-		  else begin
-		    axilite_w_rst_n = 1'b1;
 		    axilite_r_rst_n = 1'b0;
 		    axirstream_w_rst_n = 1'b1;
+		    axirstream_r_rst_n = 1'b0;
+		    state_rst = 1;
+		  end
+		  else begin
+		    axilite_w_rst_n = 1'b0;
+		    axilite_r_rst_n = 1'b0;
+		    axirstream_w_rst_n = 1'b0;
 		    axirstream_r_rst_n = 1'b1;
+		    state_rst = 2;
+		  end
+		end
+		else begin // lite
+		  if (wbs_we_i) begin
+		    axilite_w_rst_n = 1'b1;
+		    axilite_r_rst_n = 1'b0;
+		    axirstream_w_rst_n = 1'b0;
+		    axirstream_r_rst_n = 1'b0;
+		    state_rst = 3;
+		  end
+		  else begin
+		    axilite_w_rst_n = 1'b0;
+		    axilite_r_rst_n = 1'b1;
+		    axirstream_w_rst_n = 1'b0;
+		    axirstream_r_rst_n = 1'b0;
+		    state_rst = 4;
 		  end
 		end
 	end
 	else begin
-		    axilite_w_rst_n = 1'b1;
-		    axilite_r_rst_n = 1'b1;
-		    axirstream_w_rst_n = 1'b1;
-		    axirstream_r_rst_n = 1'b1;
+		    axilite_w_rst_n = 1'b0;
+		    axilite_r_rst_n = 1'b0;
+		    axirstream_w_rst_n = 1'b0;
+		    axirstream_r_rst_n = 1'b0;
+		    state_rst = 0;
 	end
 end
 
@@ -87,12 +97,19 @@ wire [31:0] axistream_data_o;
 assign wbs_dat_o = (wbs_adr_i[11:0] == 12'h084) ? axistream_data_o : axilite_data_o;
 
 
-	
+wire [11:0] awaddr;
+wire [31:0] wdata;
+
+wire [11:0] araddr;
+wire [31:0] rdata;
+
+wire [31:0] ss_data;
+wire [31:0] sm_data;
 
 axilite_write axilite_write
 (
 	.axis_clk(wb_clk_i),
-	.axis_rst_n(~wb_rst_i),
+	.axilite_w_rst_n(axilite_w_rst_n),
 	//state_o,
 	.awready(awready),
 	.wready(wready),
@@ -108,7 +125,7 @@ axilite_write axilite_write
 axilite_read axilite_read
 (
 	.axis_clk(wb_clk_i),
-	.axis_rst_n(~wb_rst_i),
+	.axilite_r_rst_n(axilite_r_rst_n),
 	//state_o,
 	.arready(arready),
 	.rvalid(rvalid),
@@ -124,7 +141,7 @@ axilite_read axilite_read
 axistream_write axistream_write
 (
 	.axis_clk(wb_clk_i),
-	.axis_rst_n(~wb_rst_i),
+	.axirstream_w_rst_n(axirstream_w_rst_n),
 	//state_o,
 	.ss_tready(ss_tready),
     	.data(wbs_dat_i),
@@ -135,7 +152,7 @@ axistream_write axistream_write
 axistream_read axistream_read
 (
 	.axis_clk(wb_clk_i),
-	.axis_rst_n(~wb_rst_i),
+	.axirstream_r_rst_n(axirstream_r_rst_n),
 	//state_o,
 	.sm_tvalid(sm_tvalid),
 	.sm_data(sm_data),

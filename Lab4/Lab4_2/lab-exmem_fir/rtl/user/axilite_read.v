@@ -1,5 +1,6 @@
 module axilite_read
-#(
+#(	parameter pADDR_WIDTH = 12,
+    	parameter pDATA_WIDTH = 32,
 	parameter S0 = 2'b00,
 	parameter S1 = 2'b01,
 	parameter S2 = 2'b10,
@@ -8,9 +9,8 @@ module axilite_read
 (
 	// Global Signals 
 	input   wire                     	axis_clk,
-	input   wire                     	axis_rst_n,
+	input   wire                     	axilite_r_rst_n,
 	//output  wire [1:0] 			state_o,
-	input	wire				wbs_cyc_i,
 	
 	input   wire				arready,
 	input   wire				rvalid,
@@ -22,18 +22,18 @@ module axilite_read
 	output	reg  [(pADDR_WIDTH-1):0]	araddr,
 	output	reg  [(pDATA_WIDTH-1):0]	data
 );
-begin // AXI4-Lite Write Transaction
+// AXI4-Lite Write Transaction
 	
 	reg [1:0] state;
 	//assign state_o = state;
 	
 	always@(negedge axis_clk) begin
-		if (!axis_rst_n) begin
+		if (!axilite_r_rst_n) begin
 			state <= S0;
 		end else begin
 			case(state)
 				S0: begin
-					if (axis_rst_n) begin
+					if (axilite_r_rst_n) begin
 						state <= S1;
 					end
 					else begin
@@ -75,6 +75,5 @@ begin // AXI4-Lite Write Transaction
 			S3: begin arvalid <= 1'b0; rready <= 1'b0; data <= rdata; end
 		endcase
 	end
-	
-end
+
 endmodule
