@@ -31,3 +31,17 @@ Lab4/Lab4_2/lab-exmem_fir/testbench/counter_la_fir/counter_la_fir.vcd
 Lab4/Lab4_2/lab-exmem_fir/testbench/counter_la_fir/output.map
 
 Lab4/lab-exmem_fir/rtl/user/.user_project_wrapper.v.swp
+
+*.swp
+*.i
+*.o
+*.s
+*.vcd
+*.hex
+*.out
+*.hexe
+
+
+
+
+

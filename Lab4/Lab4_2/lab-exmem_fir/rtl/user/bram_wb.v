@@ -35,10 +35,7 @@
  *-------------------------------------------------------------
  */
 
-`define FIR_ADDR 'h3000_0000;
-`define RAM_ADDR 'h3800_0000;
-
-module user_proj_example #(
+module bram_wb #(
     parameter BITS = 32,
     parameter DELAYS=10
 )(
@@ -56,8 +53,8 @@ module user_proj_example #(
     input [3:0] wbs_sel_i,
     input [31:0] wbs_dat_i,
     input [31:0] wbs_adr_i,
-    output reg wbs_ack_o,
-    output reg [31:0] wbs_dat_o,
+    output wbs_ack_o,
+    output [31:0] wbs_dat_o,
 
     // Logic Analyzer Signals
     input  [127:0] la_data_in,
@@ -72,86 +69,52 @@ module user_proj_example #(
     // IRQ
     output [2:0] irq
 );
-    //=====================================================================
-    //   REG AND WIRE DECLARATION
-    //=====================================================================
     wire clk;
     wire rst;
 
     wire [`MPRJ_IO_PADS-1:0] io_in;
     wire [`MPRJ_IO_PADS-1:0] io_out;
     wire [`MPRJ_IO_PADS-1:0] io_oeb;
-    //========== WB Decoder ==========
-    reg [1:0] sel;
-    // RAM
-    wire ram_wbs_cyc_i;
-    wire ram_wbs_ack_o;
-    wire [31:0] ram_wbs_dat_o;
-    // FIR
-    wire fir_wbs_cyc_i;
-    wire fir_wbs_ack_o;
-    wire [31:0] fir_wbs_dat_o;
 
-    //=====================================================================
-    //   DATA PATH & CONTROL
-    //=====================================================================
-    assign clk = wb_clk_i;
-    assign rst = wb_rst_i;
+    reg [3:0] bram_wbs_we; // 4-bit write enable signal
+    wire bram_wbs_ack;
+    wire [31:0] bram_wbs_dat_o;
+    reg wbs_ack_temp; 
+    // Create a 10-cycle delay for wbs_ack_o
+    reg [9:0] ack_delay;
+    always @(posedge wb_clk_i or posedge wb_rst_i) begin
+        if (wb_rst_i) begin
+            ack_delay <= 10'b0;
+        end else if (wbs_cyc_i) begin
+            ack_delay <= ack_delay + 1'b1;
+        end
 
-    always @(*) begin
-        sel[0] = (wbs_adr_i[31:24] == 'h30);    // FIR
-        sel[1] = (wbs_adr_i[31:24] == 'h38);    // RAM
+	if (ack_delay == 10'hb) begin
+		wbs_ack_temp <= 1'b1;
+		ack_delay <= 0;
+	end
+	else begin
+		wbs_ack_temp <= 1'b0;
+	end
     end
 
-    assign ram_wbs_cyc_i = wbs_cyc_i & sel[1];
-    assign fir_wbs_cyc_i = wbs_cyc_i & sel[0];
+    assign wbs_ack_o = wbs_ack_temp;//(ack_delay == 10'd11) ? 1'b1 : 1'b0;
+    assign wbs_dat_o = bram_wbs_dat_o;
 
-    always @(*) begin
-        case (sel)
-            'b01: wbs_dat_o = fir_wbs_dat_o;
-            'b10: wbs_dat_o = ram_wbs_dat_o;
-            default: wbs_dat_o = 32'b0;
-        endcase
-    end
-
-    always @(*) begin
-        case (sel)
-            'b01: wbs_ack_o = fir_wbs_ack_o;
-            'b10: wbs_ack_o = ram_wbs_ack_o;
-            default: wbs_ack_o = 1'b0;
-        endcase
-    end
-
-    //========== Exmem-FIR ==========
-    bram_wb user_bram (
-        .wb_clk_i   (clk),
-        .wb_rst_i   (rst),
-        .wbs_stb_i  (wbs_stb_i),
-        .wbs_cyc_i  (ram_wbs_cyc_i),
-        .wbs_we_i   (wbs_we_i),
-        .wbs_sel_i  (wbs_sel_i),
-        .wbs_dat_i  (wbs_dat_i),
-        .wbs_adr_i  (wbs_adr_i),
-        .wbs_ack_o  (ram_wbs_ack_o),
-        .wbs_dat_o  (ram_wbs_dat_o)
+    bram user_bram (
+        .CLK(wb_clk_i),
+        .WE0(bram_wbs_we), // Connect to the 4-bit write enable signal
+        .EN0(wbs_cyc_i),
+        .Di0(wbs_dat_i),
+        .Do0(bram_wbs_dat_o),
+        .A0(wbs_adr_i)
     );
 
-    //========== Verilog-FIR ==========
-    fir_wb user_fir (
-        .wb_clk_i   (clk),
-        .wb_rst_i   (rst),
-        .wbs_stb_i  (wbs_stb_i),
-        .wbs_cyc_i  (fir_wbs_cyc_i),
-        .wbs_we_i   (wbs_we_i),
-        .wbs_sel_i  (wbs_sel_i),
-        .wbs_dat_i  (wbs_dat_i),
-        .wbs_adr_i  (wbs_adr_i),
-        .wbs_ack_o  (fir_wbs_ack_o),
-        .wbs_dat_o  (fir_wbs_dat_o)
-    );
+    // Generate the 4-bit write enable signal for the BRAM
+    always @(*) begin
+        bram_wbs_we = (wbs_stb_i && wbs_cyc_i && wbs_we_i) ? 4'b1111 : 4'b0;
+    end
 
 endmodule
-
-
 
 `default_nettype wire

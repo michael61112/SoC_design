@@ -6,7 +6,13 @@
 -v ../../rtl/user/user_project_wrapper.v
 -v ../../rtl/user/user_proj_example.counter.v
 -v ../../rtl/user/bram.v
--v ../../rtl/user/hw_fir.v
+#-v ../../rtl/user/hw_fir.v
+-v ../../rtl/user/axilite_write.v
+-v ../../rtl/user/axilite_read.v
+-v ../../rtl/user/axistream_write.v
+-v ../../rtl/user/axistream_read.v
+-v ../../rtl/user/bram_wb.v
+-v ../../rtl/user/fir_wb.v
 
 ## User project -- FIR
 -v ../../rtl/user/fir/address_gen.v
