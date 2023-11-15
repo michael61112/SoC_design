@@ -18,14 +18,19 @@
 // This include is relative to $CARAVEL_PATH (see Makefile)
 #include <defs.h>
 #include <stub.c>
-#include "fir.h"
 
-#define reg_mprj_slave_ap (*(volatile uint32_t*) 0x30000000)
-#define reg_mprj_slave_data_length (*(volatile uint32_t*) 0x30000010)
-#define reg_mprj_slave_tap_param (*(volatile uint32_t*) 0x30000040)
-#define reg_mprj_slave_xn_i (*(volatile uint32_t*) 0x30000080)
-#define reg_mprj_slave_yn_o (*(volatile uint32_t*) 0x30000084)
 // --------------------------------------------------------
+#define MPRJ_RAM __attribute__ ( ( section ( ".mprjram" ) ) )
+
+#define reg_fir_ctrl (*(volatile uint32_t*)0x30000000)
+#define reg_fir_len	 (*(volatile uint32_t*)0x30000010)
+#define reg_fir_coef (*(volatile uint32_t*)0x30000040)
+#define reg_fir_x 	 (*(volatile uint32_t*)0x30000080)
+#define reg_fir_y 	 (*(volatile uint32_t*)0x30000084)
+
+#define TAPE_NUM 11
+#define DATA_NUM 64
+int taps[TAPE_NUM] = {0,-10,-9,23,56,63,56,23,-9,-10,0};
 
 /*
 	MPRJ Logic Analyzer Test:
@@ -35,10 +40,8 @@
 		- Outputs message to the UART when the test concludes successfuly
 */
 
-void main()
+void MPRJ_RAM main()
 {
-	int j;
-
 	/* Set up the housekeeping SPI to be connected internally so	*/
 	/* that external pin changes don't affect it.			*/
 
@@ -102,74 +105,44 @@ void main()
 	// Set UART clock to 64 kbaud (enable before I/O configuration)
 	// reg_uart_clkdiv = 625;
 	reg_uart_enable = 1;
-
+	
 	// Now, apply the configuration
 	reg_mprj_xfer = 1;
 	while (reg_mprj_xfer == 1);
-
-        // Configure LA probes [31:0], [127:64] as inputs to the cpu 
-	// Configure LA probes [63:32] as outputs from the cpu
-	reg_la0_oenb = reg_la0_iena = 0x00000000;    // [31:0]
-	reg_la1_oenb = reg_la1_iena = 0xFFFFFFFF;    // [63:32]
-	reg_la2_oenb = reg_la2_iena = 0x00000000;    // [95:64]
-	reg_la3_oenb = reg_la3_iena = 0x00000000;    // [127:96]
-
-	// Flag start of the test 
-	reg_mprj_datal = 0xAB400000;
-
-	// check idle = 0
-	while (!((reg_mprj_slave_ap & 0x0000000f) == 0));
-	reg_mprj_datal = 0xAB410000;
-
-	// Write data length
-	reg_mprj_slave_data_length = data_length;
-	reg_mprj_datal = 0xAB420000;
 	
-	// Write Tap Parameter
-	for (int i=0 ; i<N ; i++) {
-	  reg_mprj_slave_tap_param = taps[i];
-	}
-	reg_mprj_datal = 0xAB430000;
-
-	// Check Data Length ...
-	if (reg_mprj_slave_data_length == data_length)
-		reg_mprj_datal = 0xAB440000; // data length valid
-	else
-		reg_mprj_datal = 0xAB450000; // data length invalid
-
-
-	// Check Coefficient ...
-	int read_taps[11];
-	bool error_flag = 0;
-	*read_taps = reg_mprj_slave_tap_param;
-	for(int k=0; k < N; k=k+1) {
-		if (read_taps[k] != taps[k]) {
-			error_flag = 1; 
-			break;
+	// Start test
+	for (int n=0; n<3; n++) {
+		// Program coef, len
+		reg_fir_len = DATA_NUM;
+		for (int i=0; i<TAPE_NUM; i++) {
+			// *(&reg_fir_coef + 4*i) = taps[i];
+			(&reg_fir_coef)[i] = taps[i];
 		}
-		else
-			continue;
+
+		// Flag start of the test 
+		reg_mprj_datal = 0x00A50000;
+		// Set ap_start
+		reg_fir_ctrl = 1;
+
+		// Send X[n], receives Y[n] until DATA_NUM of Y[n] received
+		int y[DATA_NUM];
+		for (int i=0; i<DATA_NUM; i++) {
+			while ((reg_fir_ctrl & 0x10) != 0x10);
+			reg_fir_x = i;
+
+			while ((reg_fir_ctrl & 0x20) != 0x20);
+			y[i] = reg_fir_y;
+
+			if (i == DATA_NUM-1) {
+				// Write final Y (Y[7:0] output to mprj[31:24]), EndMark (‘h5A – mprj[23:16])
+				reg_mprj_datal = (y[i] << 24) + 0x005A0000;
+			}
+			else {
+				reg_mprj_datal = (y[i] << 24);
+			}
+		}
+		while ((reg_fir_ctrl & 0x02) != 0x02);
 	}
-	if (error_flag)
-		reg_mprj_datal = 0xAB460000; // Check coefficient fail
-	else
-		reg_mprj_datal = 0xAB470000; // Check coefficient pass
-
-	// Start initial Data BRAM default value(AXI-Stream)
-	for(int i=0;i< 11;i=i+1) { //(data_length-1)
-		reg_mprj_slave_xn_i = 0;
-	}
-	reg_mprj_datal = 0xAB480000;
-
-	// Start FIR
-	reg_mprj_slave_ap = 1;
-	reg_mprj_datal = 0xAB490000;
-
-	// Start the data input(AXI-Stream)
-	for(int i=0;i< data_length;i=i+1) { //(data_length-1)
-		reg_mprj_slave_xn_i = i;
-
-		reg_mprj_datal = reg_mprj_slave_yn_o;
-	}
-	reg_mprj_datal = 0xAB510000;
+	
 }
+

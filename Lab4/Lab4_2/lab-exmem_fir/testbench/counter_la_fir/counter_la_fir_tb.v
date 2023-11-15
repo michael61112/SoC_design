@@ -27,12 +27,13 @@ module counter_la_fir_tb;
 	wire gpio;
 	wire uart_tx;
 	wire [37:0] mprj_io;
-	wire signed [15:0] checkbits;
-//	wire [7:0] stagebits;
-	reg [15:0] pre_checkbits;
+	wire [7:0] checkbits;
+	wire [7:0] result;
 
-	assign checkbits  = mprj_io[31:16];
-//	assign stagebits  = mprj_io[7:0];
+	real start_time, latency, total_latency;
+
+	assign result = mprj_io[32:24];
+	assign checkbits  = mprj_io[23:16];
 	assign uart_tx = mprj_io[6];
 
 	always #12.5 clock <= (clock === 1'b0);
@@ -156,48 +157,14 @@ module counter_la_fir_tb;
 		$display("%c[0m",27);
 		$finish;
 	end
-	integer i = 0 ;
+
 	initial begin
-		pre_checkbits = 0 ;
-		
-		while (1) begin
-			wait(checkbits != pre_checkbits);
-        		$display("%d mprj: D data = %d	H data = %h", i,checkbits,checkbits);
-			i = i + 1 ;
-			pre_checkbits = checkbits;
-			if (checkbits == 16'hAB51) begin
-			$display("LA Test 2 passed");
-			#10000;
-			$finish;
-			end 
-			else if (checkbits == 16'hAB40) begin
-				$display("LA Test 1 started");
-			end	
-			
-			else if  (checkbits == 16'hAB41)	
-				$display("check idle = 0");
-			else if  (checkbits == 16'hAB42)	
-				$display("Write data length");
-			else if  (checkbits == 16'hAB43)	
-				$display("Write Tap Parameter");
-			else if  (checkbits == 16'hAB44)	
-				$display("Check Data Length valid");
-			else if  (checkbits == 16'hAB45)	
-				$display("Check Data Length invalid");
-			else if  (checkbits == 16'hAB46)	
-				$display("Check coefficient fail");
-			else if  (checkbits == 16'hAB47)	
-				$display("Check coefficient pass");
-			else if  (checkbits == 16'hAB48)	
-				$display("initial Data BRAM default value");
-			else if  (checkbits == 16'hAB49)	
-				$display("Start FIR");
-				
-		end
-		
-
+		total_latency = 0;
+		wait(checkbits == 8'hA5);
+		start_time = $realtime;
+		$display("FIR Test 1 started");
 		//wait(checkbits == 16'hAB41);
-
+		$monitor("result=%h", result);
 		//wait(checkbits == 16'd40);
 		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 		//wait(checkbits == 16'd893);
@@ -205,8 +172,31 @@ module counter_la_fir_tb;
 		//wait(checkbits == 16'd2541);
 		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 		//wait(checkbits == 16'd2669);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
+		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 8'h5A);
+		latency = $realtime - start_time;
+		total_latency += latency;
+		$display("FIR Test 1 passed, Latency = %d ns", latency);
 
+		wait(checkbits == 8'hA5);
+		start_time = $realtime;
+		$display("FIR Test 2 started");
+		wait(checkbits == 8'h5A);
+		latency = $realtime - start_time;
+		total_latency += latency;
+		$display("FIR Test 2 passed, Latency = %d ns", latency);
+
+		wait(checkbits == 8'hA5);
+		start_time = $realtime;
+		$display("FIR Test 3 started");
+		wait(checkbits == 8'h5A);
+		latency = $realtime - start_time;
+		total_latency += latency;
+		$display("FIR Test 3 passed, Latency = %d ns", latency);
+		$display("Total Latency = %d ns", total_latency);
+
+		#10000;
+		$finish;
 	end
 
 	initial begin
@@ -275,7 +265,7 @@ module counter_la_fir_tb;
 	);
 
 	spiflash #(
-		.FILENAME("fir_control.hex")
+		.FILENAME("counter_la_fir.hex")
 	) spiflash (
 		.csb(flash_csb),
 		.clk(flash_clk),

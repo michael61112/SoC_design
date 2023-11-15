@@ -166,41 +166,7 @@ module fir_wb (
         .sm_tlast   (sm_tlast),
 
         .axis_clk   (clk),
-        .axis_rst_n (~rst),
-
-    	// bram for tap RAM
-	.tap_WE(tap_WE),
-	.tap_EN(tap_EN),
-	.tap_Di(tap_Di),
-	.tap_A(tap_A),
-	.tap_Do(tap_Do),
-
-	// bram for data RAM
-	.data_WE(data_WE),
-	.data_EN(data_EN),
-	.data_Di(data_Di),
-	.data_A(data_A),
-	.data_Do(data_Do)
-);
-
-    // RAM for tap
-    bram11 tap_RAM (
-        .CLK(axis_clk),
-        .WE(tap_WE),
-        .EN(tap_EN),
-        .Di(tap_Di),
-        .A(tap_A),
-        .Do(tap_Do)
-    );
-
-    // RAM for data: choose bram11 or bram12
-    bram11 data_RAM(
-        .CLK(axis_clk),
-        .WE(data_WE),
-        .EN(data_EN),
-        .Di(data_Di),
-        .A(data_A),
-        .Do(data_Do)
+        .axis_rst_n (~rst)
     );
 
 endmodule
