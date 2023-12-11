@@ -17,7 +17,7 @@
 
 `timescale 1 ns / 1 ps
 
-module uart_tb;
+module workload_opt_tb;
 	reg clock;
     reg RSTB;
 	reg CSB;
@@ -33,6 +33,8 @@ module uart_tb;
 	reg [7:0] tx_data;
 	wire tx_busy;
 	wire tx_clear_req;
+	integer delay;
+	reg isr_complete;
 
 	assign checkbits  = mprj_io[31:16];
 	assign uart_tx = mprj_io[6];
@@ -140,12 +142,12 @@ module uart_tb;
 	`endif 
 
 	initial begin
-		$dumpfile("uart.vcd");
-		$dumpvars(0, uart_tb);
+		$dumpfile("workload_opt.vcd");
+		$dumpvars(0, workload_opt_tb);
 
 		// Repeat cycles of 1000 clock edges as needed to complete testbench
 		repeat (200) begin
-			repeat (1000) @(posedge clock);
+			repeat (3000) @(posedge clock);
 			// $display("+1000 cycles");
 		end
 		$display("%c[1;31m",27);
@@ -160,18 +162,49 @@ module uart_tb;
 
 	initial begin
 		wait(checkbits == 16'hAB40);
-		$display("LA Test 1 started");
+		fork
+			begin
+				// FIR Test
+				$display("\033[0;33mFIR Test started\033[0;37m");
+				wait(checkbits == 16'hAB41);
+				$display("\033[0;33mFIR Test passed\033[0;37m");
 
-		send_data_2;
-		//wait(checkbits == 61);
-		//send_data_1;
-		//wait(checkbits == 15);
-		//#10000;
-		//$display("LA Test 1 passed");
+				// Matmul Test
+				wait(checkbits == 16'hAB50);
+				$display("\033[0;36mMatmul Test started\033[0;37m");
+				wait(checkbits == 16'h003E);
+				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
+				wait(checkbits == 16'h0044);
+				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
+				wait(checkbits == 16'h004A);
+				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
+				wait(checkbits == 16'h0050);
+				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
+				wait(checkbits == 16'hAB51);
+				$display("\033[0;36mMatmul Test passed");
 
-		//wait(checkbits == 16'hAB51);
-		//$display("LA Test 1 passed");
-		//$finish;		
+				// Quick Sort Test
+				wait(checkbits == 16'hAB60);
+				$display("\033[0;35mQuick Sort Test started\033[0;37m");
+				wait(checkbits == 16'hAB61);
+				$display("\033[0;35mQuick Sort Test passed\033[0;37m");
+				if (isr_complete === 1) begin
+					#1000;
+					$finish();
+				end
+			end
+			begin
+				isr_complete = 0;
+				delay = $random % 1000000;
+				// delay = 1000000;
+				#delay;
+				$display("UART Test started");
+				send_data_2;
+				wait(checkbits == 16'hAB31);
+				$display("ISR completed");
+				isr_complete = 1;
+			end
+		join		
 	end
 
 	task send_data_1;begin
