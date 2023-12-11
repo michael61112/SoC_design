@@ -12,7 +12,7 @@ int* __attribute__ ( ( section ( ".mprjram" ) ) ) matmul()
 		for (j=0; j<SIZE; j++){
 			sum = 0;
 			for(k = 0;k<SIZE;k++)
-				sum += A[(i*SIZE) + k] * B[(k*SIZE) + j];
+				sum += Aq[(i*SIZE) + k] * B[(k*SIZE) + j];
 			result[(i*SIZE) + j] = sum;
 		}
 	}

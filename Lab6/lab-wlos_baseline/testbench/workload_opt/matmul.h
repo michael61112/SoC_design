@@ -2,7 +2,7 @@
 #define _MATMUL_H
 
 #define SIZE 4
-	int A[SIZE*SIZE] = {0, 1, 2, 3,
+	int Aq[SIZE*SIZE] = {0, 1, 2, 3,
 			0, 1, 2, 3,
 			0, 1, 2, 3,
 			0, 1, 2, 3,
