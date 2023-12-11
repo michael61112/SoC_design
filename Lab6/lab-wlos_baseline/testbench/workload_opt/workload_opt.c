@@ -22,7 +22,9 @@
 #include <irq_vex.h>
 #endif
 
-
+extern int* fir();
+extern int* matmul();
+extern int* qsort();
 extern void uart_write();
 extern void uart_write_char();
 extern void uart_write_string();
@@ -113,44 +115,6 @@ void main()
 	reg_mprj_xfer = 1;
 	while (reg_mprj_xfer == 1);
 
-        // Configure LA probes [31:0], [127:64] as inputs to the cpu 
-	// Configure LA probes [63:32] as outputs from the cpu
-	reg_la0_oenb = reg_la0_iena = 0x00000000;    // [31:0]
-	reg_la1_oenb = reg_la1_iena = 0xFFFFFFFF;    // [63:32]
-	reg_la2_oenb = reg_la2_iena = 0x00000000;    // [95:64]
-	reg_la3_oenb = reg_la3_iena = 0x00000000;    // [127:96]
-
-	// Flag start of the test 
-	reg_mprj_datal = 0xAB400000;
-
-	// Set Counter value to zero through LA probes [63:32]
-	reg_la1_data = 0x00000000;
-
-	// Configure LA probes from [63:32] as inputs to disable counter write
-	reg_la1_oenb = reg_la1_iena = 0x00000000;    
-
-
-	/*while (1) {
-		if (reg_la0_data_in > 0x1F4) {
-			reg_mprj_datal = 0xAB410000;
-			break;
-		}
-	}*/
-
-
-
-	/*for(int i = 0; i < 4; i++){
-		uart_write(i);
-	}*/
-
-	//uart_write_string("TEST!");
-
-	//reg_mprj_datal = uart_isr();
-
-	//print("\n");
-	//print("Monitor: Test 1 Passed\n\n");	// Makes simulation very long!
-	reg_mprj_datal = 0xAB510000;
-
 #ifdef USER_PROJ_IRQ0_EN	
 	// unmask USER_IRQ_0_INTERRUPT
 	mask = irq_getmask();
@@ -159,5 +123,57 @@ void main()
 	// enable user_irq_0_ev_enable
 	user_irq_0_ev_enable_write(1);	
 #endif
+
+	//----- Start FIR
+	// Flag start of the test 
+	reg_mprj_datal = 0xAB400000;
+
+	int *tmp = fir();
+	reg_mprj_datal = *tmp << 16;
+	reg_mprj_datal = *(tmp+1) << 16;
+	reg_mprj_datal = *(tmp+2) << 16;
+	reg_mprj_datal = *(tmp+3) << 16;
+	reg_mprj_datal = *(tmp+4) << 16;
+	reg_mprj_datal = *(tmp+5) << 16;
+	reg_mprj_datal = *(tmp+6) << 16;
+	reg_mprj_datal = *(tmp+7) << 16;
+	reg_mprj_datal = *(tmp+8) << 16;
+	reg_mprj_datal = *(tmp+9) << 16;
+	reg_mprj_datal = *(tmp+10) << 16;
+
+	// FIR Finish
+	reg_mprj_datal = 0xAB410000;
+
+	//----- Start Matmul
+	// Flag start of the test 
+	reg_mprj_datal = 0xAB500000;
+
+	tmp = matmul();
+	reg_mprj_datal = *tmp << 16;
+	reg_mprj_datal = *(tmp+1) << 16;
+	reg_mprj_datal = *(tmp+2) << 16;
+	reg_mprj_datal = *(tmp+3) << 16;	
+
+	// Finish Matmul
+	reg_mprj_datal = 0xAB510000;
+
+	//----- Start Quick Sort
+	// Flag start of the test 
+	reg_mprj_datal = 0xAB600000;
+
+	tmp = qsort();
+	reg_mprj_datal = *tmp << 16;
+	reg_mprj_datal = *(tmp+1) << 16;
+	reg_mprj_datal = *(tmp+2) << 16;
+	reg_mprj_datal = *(tmp+3) << 16;
+	reg_mprj_datal = *(tmp+4) << 16;
+	reg_mprj_datal = *(tmp+5) << 16;
+	reg_mprj_datal = *(tmp+6) << 16;
+	reg_mprj_datal = *(tmp+7) << 16;
+	reg_mprj_datal = *(tmp+8) << 16;
+	reg_mprj_datal = *(tmp+9) << 16;	
+
+	// Finish Quick Sort
+	reg_mprj_datal = 0xAB610000;
 }
 
