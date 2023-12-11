@@ -44,8 +44,7 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_tx.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_rx.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_ctrl.v"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/bram.v"]"\ 
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_uart.v"]"\ 
+ "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_wlo.v"]"\ 
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/header/user_defines.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/header/defines.v"]"\ 
   ]
@@ -212,8 +211,10 @@ set files [list \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_tx.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_rx.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_ctrl.v"] \
+ [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_wlo.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/bram.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_uart.v"] \
+ [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/bram_wb.v"] \
+ [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/wb_decoder.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/header/user_defines.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/header/defines.v"] \
 ]
@@ -1632,11 +1633,12 @@ move_dashboard_gadget -name {timing_1} -row 0 -col 1
 move_dashboard_gadget -name {utilization_2} -row 1 -col 1
 move_dashboard_gadget -name {methodology_1} -row 2 -col 1
 
-
+# Setting phy optimization 
+set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE ExploreWithHoldFix [get_runs impl_1]
 
 # Willy add for bitstream generated
 update_compile_order -fileset sources_1
-launch_runs impl_1 -to_step write_bitstream -job 3
+launch_runs impl_1 -to_step write_bitstream -job 4
 wait_on_run impl_1
 
 # Open implemented design before executing below commands.
