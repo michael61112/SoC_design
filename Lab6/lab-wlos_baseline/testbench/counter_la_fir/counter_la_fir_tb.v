@@ -159,14 +159,28 @@ module counter_la_fir_tb;
 		$display("LA Test 1 started");
 		//wait(checkbits == 16'hAB41);
 
-		//wait(checkbits == 16'd40);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd893);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd2541);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
-		//wait(checkbits == 16'd2669);
-		//$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
+		wait(checkbits == 16'h0); // 0
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'hfff6); // -10
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'hffe3); // -29
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'hffe7); // -25
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h23); // 35
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h9e); // 158
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h151); // 337
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h21b); // 539
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h2dc); // 732
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h393); // 915
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+		wait(checkbits == 16'h44a); // 1098
+		$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 
 		wait(checkbits == 16'hAB51);
 		$display("LA Test 2 passed");
