@@ -166,12 +166,37 @@ module workload_opt_tb;
 			begin
 				// FIR Test
 				$display("\033[0;33mFIR Test started\033[0;37m");
+
+				wait(checkbits == 16'h0); // 0
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'hfff6); // -10
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'hffe3); // -29
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'hffe7); // -25
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h23); // 35
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h9e); // 158
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h151); // 337
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h21b); // 539
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h2dc); // 732
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h393); // 915
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'h44a); // 1098
+				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+
 				wait(checkbits == 16'hAB41);
 				$display("\033[0;33mFIR Test passed\033[0;37m");
 
 				// Matmul Test
 				wait(checkbits == 16'hAB50);
 				$display("\033[0;36mMatmul Test started\033[0;37m");
+
 				wait(checkbits == 16'h003E);
 				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
 				wait(checkbits == 16'h0044);
@@ -180,12 +205,23 @@ module workload_opt_tb;
 				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
 				wait(checkbits == 16'h0050);
 				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
+
 				wait(checkbits == 16'hAB51);
 				$display("\033[0;36mMatmul Test passed");
 
 				// Quick Sort Test
 				wait(checkbits == 16'hAB60);
 				$display("\033[0;35mQuick Sort Test started\033[0;37m");
+
+				wait(checkbits == 16'd40);
+				$display("Call function qsort() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'd893);
+				$display("Call function qsort() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'd2541);
+				$display("Call function qsort() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+				wait(checkbits == 16'd2669);
+				$display("Call function qsort() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
+
 				wait(checkbits == 16'hAB61);
 				$display("\033[0;35mQuick Sort Test passed\033[0;37m");
 				if (isr_complete === 1) begin
