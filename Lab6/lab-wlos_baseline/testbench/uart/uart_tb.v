@@ -163,15 +163,15 @@ module uart_tb;
 		$display("LA Test 1 started");
 
 		send_data_2;
-		//wait(checkbits == 61);
-		//send_data_1;
-		//wait(checkbits == 15);
-		//#10000;
-		//$display("LA Test 1 passed");
 
-		//wait(checkbits == 16'hAB51);
-		//$display("LA Test 1 passed");
-		//$finish;		
+		wait(checkbits == 16'hAB51);
+
+                repeat (100) begin
+                        repeat (1000) @(posedge clock);
+                end
+
+		$display("LA Test 1 passed");
+		$finish;
 	end
 
 	task send_data_1;begin
