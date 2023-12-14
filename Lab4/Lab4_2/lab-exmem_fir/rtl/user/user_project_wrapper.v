@@ -73,7 +73,7 @@ module user_project_wrapper #(
 
     // Independent clock (on independent integer divider)
     input   user_clock2,
-output reg user_project_signal,
+
     // User maskable interrupt signals
     output [2:0] user_irq
 );
@@ -82,7 +82,7 @@ output reg user_project_signal,
 /* User project is instantiated  here   */
 /*--------------------------------------*/
 
-user_proj_example user_proj (
+user_proj_example mprj (
 `ifdef USE_POWER_PINS
 	.vccd1(vccd1),	// User area 1 1.8V power
 	.vssd1(vssd1),	// User area 1 digital ground
@@ -117,25 +117,7 @@ user_proj_example user_proj (
     // IRQ
     .irq(user_irq)
 );
-/*
-hw_fir hw_fir (
 
-    .wb_clk_i(wb_clk_i),
-    .wb_rst_i(wb_rst_i),
-
-    // MGMT SoC Wishbone Slave
-
-    .wbs_cyc_i(wbs_cyc_fir_i),
-    .wbs_stb_i(wbs_stb_fir_i),
-    .wbs_we_i(wbs_we_fir_i),
-    .wbs_sel_i(wbs_sel_fir_i),
-    .wbs_adr_i(wbs_dat_fir_i),
-    .wbs_dat_i(wbs_dat_i),
-    .wbs_ack_o(wbs_ack_fir_o),
-    .wbs_dat_o(wbs_dat_fir_o)
-
-);
-*/
-endmodule
+endmodule	// user_project_wrapper
 
 `default_nettype wire
