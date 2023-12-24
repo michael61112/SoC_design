@@ -154,8 +154,17 @@ module counter_la_mm_tb;
 		$finish;
 	end
 
+	reg [31:0] start_time;
+	reg [31:0] end_time;
+	reg [31:0] wait_time;
+	reg [31:0] counter;
+	reg counter_en;
 	initial begin
+		counter_en = 0;
+		counter = 0;
 		wait(checkbits == 16'hAB40);
+		counter_en = 1'b1;
+		start_time = $time; // Records the simulation time
 		$display("LA Test 1 started");
 		//wait(checkbits == 16'hAB41);
 
@@ -169,9 +178,24 @@ module counter_la_mm_tb;
 		$display("Call function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);		
 
 		wait(checkbits == 16'hAB51);
+		counter_en = 1'b0;
+		end_time = $time;
 		$display("LA Test 2 passed");
+
+		wait_time = end_time - start_time;
+		$display("Wait time: %0d time units", wait_time);
+		$display("Wait #clk: %0d units", counter);
 		#10000;
 		$finish;
+	end
+
+	always@(posedge clock) begin
+		if(counter_en) begin
+			counter <= counter + 1;
+		end
+		else begin
+			counter <= counter;
+		end
 	end
 
 	initial begin
