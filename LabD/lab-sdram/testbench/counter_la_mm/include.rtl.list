@@ -7,6 +7,7 @@
 -v ../../rtl/user/user_proj_example.counter.v
 -v ../../rtl/user/sdram_controller.v
 -v ../../rtl/user/sdr.v
+-v ../../rtl/user/prefetch.v
 
 ## VIP
 -v ../../vip/tbuart.v
