@@ -1,3 +1,4 @@
+`define cache_size 64
 module sdram_controller (
         input   clk,
         input   rst,
@@ -81,14 +82,15 @@ module sdram_controller (
                READ = 4'd9,
                READ_RES = 4'd10,
                WRITE = 4'd11,
-               PRECHARGE = 4'd12;
+               PRECHARGE = 4'd12,
+               READ_CONTINUE = 4'd13;
     
     // registers for SDRAM signals
     reg cle_d, cle_q;
     reg dqm_q, dqm_d;
     reg [3:0] cmd_d, cmd_q;
     reg [1:0] ba_d, ba_q;
-    reg [12:0] a_d, a_q;
+    reg [12:0] a_d, a_q, sdr_index_temp;
     reg [31:0] dq_d, dq_q;
     reg [31:0] dqi_d, dqi_q;
     reg dq_en_d, dq_en_q;
@@ -128,12 +130,21 @@ module sdram_controller (
     reg [12:0] row_addr_d[3:0], row_addr_q[3:0];
 
     reg [2:0] precharge_bank_d, precharge_bank_q;
-    integer i;
+    integer i, j;
+    reg [31:0] switch_bank_d, switch_bank_q;
+    reg continue_state;
 
     assign data_out = data_q;
     assign busy = !ready_q;
     assign out_valid = out_valid_q;
-    
+
+    reg [31:0] cache_reg_d[`cache_size-1:0], cache_reg_q[`cache_size-1:0], cache_out;
+    reg [31:0] continue_read_index_d, continue_read_index_q, cache_index_reg, cache_index_read_reg;
+    reg [1:0] bank_id_d, bank_id_q;
+    reg read_d, read_q, cache_not_ready;
+    wire [31:0] check_16;
+
+    assign check_16 = cache_reg_d[16];
     always @* begin
         // Default values
         dq_d = dq_q;
@@ -152,13 +163,17 @@ module sdram_controller (
         out_valid_d = 1'b0;
         precharge_bank_d = precharge_bank_q;
         rw_op_d = rw_op_q;
+        switch_bank_d = switch_bank_q;
 
         row_open_d = row_open_q;
-
+        bank_id_d = bank_id_q;
+        continue_read_index_d = continue_read_index_q;
+        read_d = read_q;
         // row_addr is a 2d array and must be coppied this way
         for (i = 0; i < 4; i = i + 1)
             row_addr_d[i] = row_addr_q[i];
-
+        for (j = 0; j < `cache_size; j = j + 1)
+            cache_reg_d[j] = cache_reg_q[j];
         // The data in the SDRAM must be refreshed periodically.
         // This conter ensures that the data remains intact.
         refresh_flag_d = refresh_flag_q;
@@ -183,7 +198,7 @@ module sdram_controller (
             saved_data_d = data_in;
             saved_addr_d = addr;
             ready_d = 1'b0;
-        end 
+        end
 
         case (state_q)
             ///// INITALIZATION /////
@@ -215,6 +230,8 @@ module sdram_controller (
                 ready_d = 1'b1;
 
                 dq_en_d = 1'b0;
+                cache_not_ready = 1'b1;
+                switch_bank_d = 0;
             end
             WAIT: begin
                 delay_ctr_d = delay_ctr_q - 1'b1;
@@ -260,7 +277,10 @@ module sdram_controller (
                         // no rows open
                         state_d = ACTIVATE; // open the row
                     end
+                end else begin
+                    state_d = IDLE;
                 end
+                continue_state = 1'b0;
             end
 
             ///// REFRESH /////
@@ -298,24 +318,81 @@ module sdram_controller (
 
             ///// READ /////
             READ: begin
-                cmd_d = CMD_READ;
-                a_d = {2'b0, 1'b0, addr_q[7:0], 2'b0};
-                ba_d = addr_q[9:8];
-                state_d = WAIT;
-
-                // Jiin
-                // delay_ctr_d = 13'd2; // wait for the data to show up
-                delay_ctr_d = tCASL; 
-
-                next_state_d = READ_RES;
-
+                if (bank_id_q == addr_q[9:8] && cache_not_ready==0) begin // Check cache when bank match // bank_id_q == addr_q[9:8] && cache_not_ready==0
+                    cache_index_read_reg = addr_q[7:0]>>2;
+                    data_d = cache_reg_q[cache_index_read_reg];
+                    out_valid_d = 1'b1;
+                    state_d = IDLE;
+                    //ready_d = 1'b1; // clear the queue
+                end else begin
+                    cmd_d = CMD_READ;
+                    if (switch_bank_q == 'hA) begin //addr_q[7:0] == 8'h0 // switch_bank == 3
+                        a_d = {2'b0, 1'b0, 8'h0, 2'b0};
+                        bank_id_d = addr_q[9:8];
+                        state_d = READ_CONTINUE;
+                        continue_read_index_d = 1;
+                        read_d = 0;
+                        cache_not_ready = 0;
+                        switch_bank_d = 0;
+                    end else begin
+                        a_d = {2'b0, 1'b0, addr_q[7:0], 2'b0};
+                        delay_ctr_d = tCASL;
+                        state_d = WAIT;
+                        next_state_d = READ_RES;
+                        switch_bank_d = switch_bank_q + 1;
+                    end
+                    ba_d = addr_q[9:8];
+                    //state_d = READ_RES;
+                    /*
+                    state_d = WAIT;
+                    delay_ctr_d = tCASL;
+                    next_state_d = READ_RES;
+                    */
+                end
             end
             READ_RES: begin
                 data_d = dqi_q; // data_d by pass
                 out_valid_d = 1'b1;
                 state_d = IDLE;
             end
-
+            READ_CONTINUE: begin
+                continue_state = 1'b1;
+                if (continue_read_index_q < `cache_size) begin
+                    /*
+                    if (continue_read_index_q == 3+1) begin
+                        data_d = dqi_q; // data_d by pass
+                        out_valid_d = 1'b1;
+                        cache_reg_d[0] = dqi_q;
+                        read_d = 1;
+                    end
+*/
+                    cmd_d = CMD_READ;
+                    sdr_index_temp = (continue_read_index_q<<2);
+                    a_d = {2'b0, 1'b0, sdr_index_temp, 2'b0};
+                    ba_d = addr_q[9:8];
+/*
+                    if (continue_read_index_q > 3+1) begin  // Read data response
+                        cache_reg_d[continue_read_index_q-5] = dqi_q;
+                    end
+                    */
+                    if (continue_read_index_q > 3) begin  // Read data response
+                        cache_index_reg = continue_read_index_q-4;
+                        cache_reg_d[cache_index_reg] = dqi_q;
+                        cache_out = cache_reg_d[cache_index_reg];
+                        read_d = 1;
+                    end
+                    state_d = READ_CONTINUE;
+                end else begin
+                    cache_index_reg = continue_read_index_q-4;
+                    cache_reg_d[cache_index_reg] = dqi_q;
+                    if (continue_read_index_q == (`cache_size+3)) begin
+                        state_d = READ;
+                    end else begin
+                        state_d = READ_CONTINUE;
+                    end
+                end
+                continue_read_index_d = continue_read_index_q + 1;
+            end
             ///// WRITE /////
             WRITE: begin
                 cmd_d = CMD_WRITE;
@@ -327,6 +404,10 @@ module sdram_controller (
                 ba_d = addr_q[9:8];
 
                 state_d = IDLE;
+                if (bank_id_q == addr_q[9:8] && cache_not_ready==0) begin // Check cache when bank match
+                    cache_index_read_reg = addr_q[7:0]>>2;
+                    cache_reg_q[cache_index_read_reg] = data_q;
+                end
             end
 
             ///// PRECHARGE /////
@@ -374,6 +455,10 @@ module sdram_controller (
         a_q <= a_d;
         dq_q <= dq_d;
         dqi_q <= dqi_d;
+        bank_id_q <= bank_id_d;
+        continue_read_index_q <= continue_read_index_d;
+        read_q <= read_d;
+        switch_bank_q <= switch_bank_d;
 
         next_state_q <= next_state_d;
         refresh_flag_q <= refresh_flag_d;
@@ -384,6 +469,8 @@ module sdram_controller (
         row_open_q <= row_open_d;
         for (i = 0; i < 4; i = i + 1)
             row_addr_q[i] <= row_addr_d[i];
+        for (j = 0; j < `cache_size; j = j + 1)
+            cache_reg_q[j] <= cache_reg_d[j];
         precharge_bank_q <= precharge_bank_d;
         rw_op_q <= rw_op_d;
         delay_ctr_q <= delay_ctr_d;
