@@ -76,6 +76,7 @@ module user_proj_example #(
     wire [`MPRJ_IO_PADS-1:0] io_out;
     wire [`MPRJ_IO_PADS-1:0] io_oeb;
 
+    wire valid;
 
     wire sdram_cle;
     wire sdram_cs;
@@ -92,10 +93,16 @@ module user_proj_example #(
     wire [22:0] ctrl_addr;
     wire ctrl_busy;
     wire ctrl_in_valid, ctrl_out_valid;
-    wire [31:0] sd_data_out;
+
+    reg ctrl_in_valid_q;
+    
     // WB MI A
     
+    assign valid = wbs_stb_i && wbs_cyc_i;
+    assign ctrl_in_valid = wbs_we_i ? valid : ~ctrl_in_valid_q && valid;
+    assign wbs_ack_o = (wbs_we_i) ? ~ctrl_busy && valid : ctrl_out_valid; 
     assign bram_mask = wbs_sel_i & {4{wbs_we_i}};
+    assign ctrl_addr = wbs_adr_i[22:0];
 
     // IO
     assign io_out = d2c_data;
@@ -111,23 +118,17 @@ module user_proj_example #(
     assign rst = (~la_oenb[65]) ? la_data_in[65]: wb_rst_i;
     assign rst_n = ~rst;
 
-    prefetch sd_prefetch(
-        .clk(clk),
-        .rst(rst),
-        // Wishbone
-        .wbs_stb_i(wbs_stb_i),
-        .wbs_cyc_i(wbs_cyc_i),
-        .wbs_we_i(wbs_we_i),
-        .wbs_adr_i(wbs_adr_i),
-        .wbs_ack_o(wbs_ack_o),
-        .wbs_dat_o(wbs_dat_o),
-        // SD controller
-        .ctrl_in_valid(ctrl_in_valid),
-        .ctrl_out_valid(ctrl_out_valid),
-        .ctrl_busy(ctrl_busy),
-        .ctrl_addr(ctrl_addr),
-        .sd_data_out(sd_data_out)
-    );
+    always @(posedge clk) begin
+        if (rst) begin
+            ctrl_in_valid_q <= 1'b0;
+        end
+        else begin
+            if (~wbs_we_i && valid && ~ctrl_busy && ctrl_in_valid_q == 1'b0)
+                ctrl_in_valid_q <= 1'b1;
+            else if (ctrl_out_valid)
+                ctrl_in_valid_q <= 1'b0;
+        end
+    end
 
     sdram_controller user_sdram_controller (
         .clk(clk),
@@ -147,7 +148,7 @@ module user_proj_example #(
         .user_addr(ctrl_addr),
         .rw(wbs_we_i),
         .data_in(wbs_dat_i),
-        .data_out(sd_data_out),
+        .data_out(wbs_dat_o),
         .busy(ctrl_busy),
         .in_valid(ctrl_in_valid),
         .out_valid(ctrl_out_valid)
