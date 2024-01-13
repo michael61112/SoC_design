@@ -1,0 +1,8 @@
+Reading uart.hex
+ERROR: ../../vip/spiflash.v:111: $readmemh: Unable to open uart.hex for reading.
+uart.hex loaded into memory
+Memory 5 bytes = 0xxx 0xxx 0xxx 0xxx 0xxx
+VCD info: dumpfile workload_opt.vcd opened for output.
+** VVP Stop(0) **
+** Flushing output streams.
+** Current simulation time is 2690187500 ticks.
