@@ -146,7 +146,7 @@ module workload_opt_tb;
 		$dumpvars(0, workload_opt_tb);
 
 		// Repeat cycles of 1000 clock edges as needed to complete testbench
-		repeat (200) begin
+		repeat (1000) begin
 			repeat (3000) @(posedge clock);
 			// $display("+1000 cycles");
 		end
@@ -160,8 +160,22 @@ module workload_opt_tb;
 		$finish;
 	end
 
+	reg [31:0] start_time_fir, start_time_mm, start_time_qs;
+	reg [31:0] end_time_fir, end_time_mm, end_time_qs;
+	reg [31:0] wait_time_fir, wait_time_mm, wait_time_qs;
+	reg [31:0] counter_fir, counter_mm, counter_qs, counter;
+	reg counter_en_fir, counter_en_mm, counter_en_qs, counter_en;
+
 	initial begin
+		counter_en_fir = 0;
+		counter_en_mm = 0;
+		counter_en_qs = 0;
+		counter_fir = 0;
+		counter_mm = 0;
+		counter_qs = 0;
 		wait(checkbits == 16'hAB40);
+		counter_en_fir = 1'b1;
+		start_time_fir = $time;
 		fork
 			begin
 				// FIR Test
@@ -191,10 +205,14 @@ module workload_opt_tb;
 				$display("Call function fir() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 
 				wait(checkbits == 16'hAB41);
+				counter_en_fir = 1'b0;
+				end_time_fir = $time;
 				$display("\033[0;33mFIR Test passed\033[0;37m");
 
 				// Matmul Test
 				wait(checkbits == 16'hAB50);
+				counter_en_mm = 1'b1;
+				start_time_mm = $time;
 				$display("\033[0;36mMatmul Test started\033[0;37m");
 
 				wait(checkbits == 16'h003E);
@@ -207,10 +225,14 @@ module workload_opt_tb;
 				$display("\033[0;36mCall function matmul() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x\033[0;37m", checkbits);
 
 				wait(checkbits == 16'hAB51);
+				counter_en_mm = 1'b0;
+				end_time_mm = $time;
 				$display("\033[0;36mMatmul Test passed");
 
 				// Quick Sort Test
 				wait(checkbits == 16'hAB60);
+				counter_en_qs = 1'b1;
+				start_time_qs = $time;
 				$display("\033[0;35mQuick Sort Test started\033[0;37m");
 
 				wait(checkbits == 16'd40);
@@ -223,11 +245,29 @@ module workload_opt_tb;
 				$display("Call function qsort() in User Project BRAM (mprjram, 0x38000000) return value passed, 0x%x", checkbits);
 
 				wait(checkbits == 16'hAB61);
+				counter_en_qs = 1'b0;
+				end_time_qs = $time;
 				$display("\033[0;35mQuick Sort Test passed\033[0;37m");
+
+				wait_time_fir = end_time_fir - start_time_fir;
+				wait_time_mm = end_time_mm - start_time_mm;
+				wait_time_qs = end_time_qs - start_time_qs;
+
+				$display("[FIR]Wait time: %0d time units", wait_time_fir);
+				$display("[FIR]Wait #clk: %0d units", counter_fir);
+				$display("[MM]Wait time: %0d time units", wait_time_mm);
+				$display("[MM]Wait #clk: %0d units", counter_mm);
+				$display("[QS]Wait time: %0d time units", wait_time_qs);
+				$display("[QS]Wait #clk: %0d units", counter_qs);
+				#10000;
+				$finish;
+
+/*
 				if (isr_complete === 1) begin
 					#1000;
 					$finish();
 				end
+*/
 			end
 			begin
 				isr_complete = 0;
@@ -243,6 +283,27 @@ module workload_opt_tb;
 		join		
 	end
 
+	always@(posedge clock) begin
+		if(counter_en_fir) begin
+			counter_fir <= counter_fir + 1;
+		end
+		else begin
+			counter_fir <= counter_fir;
+		end
+		if(counter_en_mm) begin
+			counter_mm <= counter_mm + 1;
+		end
+		else begin
+			counter_mm <= counter_mm;
+		end
+		if(counter_en_qs) begin
+			counter_qs <= counter_qs + 1;
+		end
+		else begin
+			counter_qs <= counter_qs;
+		end
+	end
+
 	task send_data_1;begin
 		@(posedge clock);
 		tx_start = 1;
@@ -252,6 +313,12 @@ module workload_opt_tb;
 		wait(!tx_busy);
 		tx_start = 0;
 		$display("tx complete 1");
+                if(counter_en) begin
+                        counter <= counter + 1;
+                end
+                else begin
+                        counter <= counter;
+                end
 		
 	end endtask
 

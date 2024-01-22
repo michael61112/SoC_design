@@ -93,6 +93,43 @@ wire [3:0] usr_bram_wbs_sel_i;
 wire [31:0] usr_bram_wbs_dat_i, usr_bram_wbs_adr_i;
 wire usr_bram_wbs_ack_o;
 wire [31:0] usr_bram_wbs_dat_o;
+// SDRAM
+wire clk;
+wire rst, rst_n;
+
+wire valid;
+
+wire sdram_cle;
+wire sdram_cs;
+wire sdram_cas;
+wire sdram_ras;
+wire sdram_we;
+wire sdram_dqm;
+wire [1:0] sdram_ba;
+wire [12:0] sdram_a;
+wire [31:0] d2c_data;
+wire [31:0] c2d_data;
+wire [3:0]  bram_mask;
+
+wire [22:0] ctrl_addr;
+wire ctrl_busy;
+wire ctrl_in_valid, ctrl_out_valid;
+
+reg ctrl_in_valid_q;
+
+
+assign valid = usr_bram_wbs_stb_i && usr_bram_wbs_cyc_i;
+assign ctrl_in_valid = usr_bram_wbs_we_i ? valid : ~ctrl_in_valid_q && valid;
+assign usr_bram_wbs_ack_o = (usr_bram_wbs_we_i) ? ~ctrl_busy && valid : ctrl_out_valid; 
+assign bram_mask = usr_bram_wbs_sel_i & {4{usr_bram_wbs_we_i}};
+assign ctrl_addr = usr_bram_wbs_adr_i[22:0];
+
+// LA
+assign la_data_out = {{(127-BITS){1'b0}}, d2c_data};
+// Assuming LA probes [65:64] are for controlling the count clk & reset  
+assign clk = (~la_oenb[64]) ? la_data_in[64]: wb_clk_i;
+assign rst = (~la_oenb[65]) ? la_data_in[65]: wb_rst_i;
+assign rst_n = ~rst;
 
 /*--------------------------------------*/
 /* User project is instantiated  here   */
@@ -162,7 +199,7 @@ uart uart (
     // irq
     .user_irq (user_irq)
 );
-
+/*
 bram_wb user_bram (
     .wb_clk_i   (wb_clk_i),
     .wb_rst_i   (wb_rst_i),
@@ -175,6 +212,60 @@ bram_wb user_bram (
     .wbs_ack_o  (usr_bram_wbs_ack_o),
     .wbs_dat_o  (usr_bram_wbs_dat_o)
 );
+*/
+
+    always @(posedge wb_clk_i) begin
+        if (wb_rst_i) begin
+            ctrl_in_valid_q <= 1'b0;
+        end
+        else begin
+            if (~usr_bram_wbs_we_i && valid && ~ctrl_busy && ctrl_in_valid_q == 1'b0)
+                ctrl_in_valid_q <= 1'b1;
+            else if (ctrl_out_valid)
+                ctrl_in_valid_q <= 1'b0;
+        end
+    end
+
+
+    sdram_controller user_sdram_controller (
+        .clk(clk),
+        .rst(rst),
+        
+        .sdram_cle(sdram_cle),
+        .sdram_cs(sdram_cs),
+        .sdram_cas(sdram_cas),
+        .sdram_ras(sdram_ras),
+        .sdram_we(sdram_we),
+        .sdram_dqm(sdram_dqm),
+        .sdram_ba(sdram_ba),
+        .sdram_a(sdram_a),
+        .sdram_dqi(d2c_data),
+        .sdram_dqo(c2d_data),
+
+        .user_addr(ctrl_addr),
+        .rw(usr_bram_wbs_we_i),
+        .data_in(usr_bram_wbs_dat_i),
+        .data_out(usr_bram_wbs_dat_o),
+        .busy(ctrl_busy),
+        .in_valid(ctrl_in_valid),
+        .out_valid(ctrl_out_valid)
+    );
+
+    sdr user_bram (
+        .Rst_n(rst_n),
+        .Clk(clk),
+        .Cke(sdram_cle),
+        .Cs_n(sdram_cs),
+        .Ras_n(sdram_ras),
+        .Cas_n(sdram_cas),
+        .We_n(sdram_we),
+        .Addr(sdram_a),
+        .Ba(sdram_ba),
+        .Dqm(bram_mask),
+        .Dqi(c2d_data),
+        .Dqo(d2c_data)
+    );
+
 
 endmodule	// user_project_wrapper
 
