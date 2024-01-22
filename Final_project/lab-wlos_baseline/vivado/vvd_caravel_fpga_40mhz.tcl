@@ -40,11 +40,18 @@ proc checkRequiredFiles { origin_dir} {
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/soc/mgmt_core_wrapper.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/soc/mprj_io.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/soc/caravel.v"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/$user_design_file"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_tx.v"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_rx.v"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/uart_ctrl.v"]"\
- "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_wlo.v"]"\ 
+ "[file normalize "$origin_dir/../rtl/user/bram.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/bram11.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/exmem_pipeline.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/fir.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/mm.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/qs.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/$user_design_file"]"\
+ "[file normalize "$origin_dir/../rtl/user/uart_tx.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/uart_rx.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/uart_ctrl.v"]"\
+ "[file normalize "$origin_dir/../rtl/user/user_proj_wrapper_final.v"]" \
+ "[file normalize "$origin_dir/../rtl/user/user_proj_example_final.v"]" \
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/header/user_defines.v"]"\
  "[file normalize "$origin_dir/vvd_srcs/caravel_soc/rtl/header/defines.v"]"\ 
   ]
@@ -207,14 +214,18 @@ set files [list \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/soc/mgmt_core_wrapper.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/soc/mprj_io.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/soc/caravel.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/${user_design_file}"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_tx.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_rx.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/uart_ctrl.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/user_proj_wrapper_wlo.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/bram.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/bram_wb.v"] \
- [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/user/wb_decoder.v"] \
+ [file normalize "${origin_dir}/../rtl/user/bram.v"]\
+ [file normalize "${origin_dir}/../rtl/user/bram11.v"]\
+ [file normalize "${origin_dir}/../rtl/user/exmem_pipeline.v"]\
+ [file normalize "${origin_dir}/../rtl/user/fir.v"]\
+ [file normalize "${origin_dir}/../rtl/user/mm.v"]\
+ [file normalize "${origin_dir}/../rtl/user/qs.v"]\
+ [file normalize "${origin_dir}/../rtl/user/$user_design_file"]\
+ [file normalize "${origin_dir}/../rtl/user/uart_tx.v"]\
+ [file normalize "${origin_dir}/../rtl/user/uart_rx.v"]\
+ [file normalize "${origin_dir}/../rtl/user/uart_ctrl.v"]\
+ [file normalize "${origin_dir}/../rtl/user/user_proj_wrapper_final.v"] \
+ [file normalize "${origin_dir}/../rtl/user/user_proj_example_final.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/header/user_defines.v"] \
  [file normalize "${origin_dir}/vvd_srcs/caravel_soc/rtl/header/defines.v"] \
 ]
@@ -1626,6 +1637,8 @@ create_dashboard_gadget -name {utilization_2} -type utilization
 set obj [get_dashboard_gadgets [ list "utilization_2" ] ]
 set_property -name "reports" -value "impl_1#impl_1_place_report_utilization_0" -objects $obj
 
+set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE ExploreWithHoldFix [get_runs impl_1]
+
 move_dashboard_gadget -name {utilization_1} -row 0 -col 0
 move_dashboard_gadget -name {power_1} -row 1 -col 0
 move_dashboard_gadget -name {drc_1} -row 2 -col 0
@@ -1633,12 +1646,11 @@ move_dashboard_gadget -name {timing_1} -row 0 -col 1
 move_dashboard_gadget -name {utilization_2} -row 1 -col 1
 move_dashboard_gadget -name {methodology_1} -row 2 -col 1
 
-# Setting phy optimization 
-set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE ExploreWithHoldFix [get_runs impl_1]
+
 
 # Willy add for bitstream generated
 update_compile_order -fileset sources_1
-launch_runs impl_1 -to_step write_bitstream -job 4
+launch_runs impl_1 -to_step write_bitstream -job 3
 wait_on_run impl_1
 
 # Open implemented design before executing below commands.

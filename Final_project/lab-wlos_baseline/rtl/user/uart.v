@@ -35,10 +35,10 @@ module uart #(
   wire  tx;
   wire  rx;
 
-  assign io_oeb[6] = 1'b0; // Set mprj_io_31 to output
-  assign io_oeb[5] = 1'b1; // Set mprj_io_30 to input
-  assign io_out[6] = tx;	// Connect mprj_io_6 to tx
-  assign rx = io_in[5];	// Connect mprj_io_5 to rx
+  assign io_oeb[34] = 1'b0; // Set mprj_io_31 to output
+  assign io_oeb[33] = 1'b1; // Set mprj_io_30 to input
+  assign io_out[34] = tx;	// Connect mprj_io_6 to tx
+  assign rx = io_in[33];	// Connect mprj_io_5 to rx
 
   // irq
   wire irq;
