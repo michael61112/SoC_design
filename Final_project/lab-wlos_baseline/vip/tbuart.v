@@ -1,15 +1,17 @@
 `default_nettype wire
 `timescale 1 ns / 1 ps
+`define BAUD_RATE = 9600
 
 /* tbuart --- mimic an external UART display, operating at 9600 baud	*/
 /* and accepting ASCII characters for display.				*/
-module tbuart (
+module tbuart #(parameter STR_LEN = -1) (
 	input  ser_rx,
 	input tx_start,
 	output reg ser_tx,
 	input [7:0] tx_data,
 	output reg tx_busy,
-	output reg tx_clear_req
+	output reg tx_clear_req,
+	output reg rx_finish
 );
 	reg [2:0] recv_state;
 	reg [2:0] recv_next_state;
@@ -36,8 +38,9 @@ module tbuart (
 	parameter T_CLEAR       = 3'b100;
 	
 
-	parameter baud_rate = 9600;
-
+	parameter baud_rate = `BAUD_RATE;
+	integer cnt = STR_LEN;
+	reg [8*STR_LEN-1:0] string;
 
 	initial begin
 		clk = 0;
@@ -57,7 +60,8 @@ module tbuart (
 		clk_cnt = 0;
 	end
 
-	always #52083 clk <= ~clk;
+	always #52083 clk <= ~clk; // 9600
+	// always #4340 clk <= ~clk; // 115200
 
 	always@(posedge clk)begin
 		recv_state <= recv_next_state;
@@ -111,10 +115,22 @@ module tbuart (
 	always@(posedge clk)begin
 		if(recv_state==R_STOP_BIT)begin
 			recv_buf_data <= {recv_buf_data, recv_pattern};
-			$display("recevied word %d", recv_pattern);
+			$display("\033[0;36mrecevied word %s (%d)\033[0;37m", recv_pattern, recv_pattern);
+			string[(cnt-1)*8 +: 8] <= recv_pattern;
+			cnt <= cnt - 1;
+			rx_finish <= 1'b1;
+		end else begin
+			rx_finish <= 1'b0;
 		end
 	end
-	
+
+	always @(posedge clk) begin
+		if (cnt == 0) begin
+			$display("\033[0;36mrx demo complete:\n\"%s\"\033[0;37m", string);
+			$display($time);
+			$finish;
+		end
+	end
 	// --------------------Transmitter------------------------//
 	always@(posedge clk)begin
 		tr_state <= tr_next_state;

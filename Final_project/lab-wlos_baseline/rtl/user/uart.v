@@ -1,5 +1,7 @@
+`define UART_ADDR 32'h3000_0000
+
 module uart #(
-  parameter BAUD_RATE = 9600 
+  parameter BAUD_RATE = 9600
 )(
 `ifdef USE_POWER_PINS
     inout vccd1,	// User area 1 1.8V supply
@@ -30,7 +32,9 @@ module uart #(
   // irq
   output [2:0] user_irq
 );
-
+//=====================================================================
+//   LOGIC DECLARATION
+//=====================================================================
   // UART 
   wire  tx;
   wire  rx;
@@ -48,9 +52,11 @@ module uart #(
   wire [7:0] rx_data; 
   wire irq_en;
   wire rx_finish;
+  wire rx_valid;
+  wire rx_fifofull;
   wire rx_busy;
   wire [7:0] tx_data;
-  wire tx_start_clear;
+  wire tx_finish;
   wire tx_start;
   wire tx_busy;
   wire wb_valid;
@@ -63,15 +69,16 @@ module uart #(
   assign clk_div = 40000000 / BAUD_RATE;
 
   uart_receive receive(
-    .rst_n      (~wb_rst_i  ),
-    .clk        (wb_clk_i   ),
-    .clk_div    (clk_div    ),
-    .rx         (rx         ),
-    .rx_data    (rx_data    ),
-    .rx_finish  (rx_finish  ),	// data receive finish
-    .irq        (irq        ),
-    .frame_err  (frame_err  ),
-    .busy       (rx_busy    )
+    .rst_n        (~wb_rst_i  ),
+    .clk          (wb_clk_i   ),
+    .clk_div      (clk_div    ),
+    .rx           (rx         ),
+    .rx_data      (rx_data    ),
+    .rx_valid     (rx_valid),
+    .rx_fifofull  (rx_fifofull),
+    .rx_finish    (rx_finish),
+    .frame_err    (frame_err  ),
+    .busy         (rx_busy    )
   );
 
   uart_transmission transmission(
@@ -80,7 +87,7 @@ module uart #(
     .clk_div    (clk_div    ),
     .tx         (tx         ),
     .tx_data    (tx_data    ),
-    .clear_req  (tx_start_clear), // clear transmission request
+    .tx_finish  (tx_finish), // clear transmission request
     .tx_start   (tx_start   ),
     .busy       (tx_busy    )
   );
@@ -96,12 +103,14 @@ module uart #(
 	.o_wb_ack	(wbs_ack_o),
 	.o_wb_dat (wbs_dat_o),
 	.i_rx		  (rx_data	),
-  .i_irq    (irq      ),
+  .i_rx_valid(rx_valid),
+  .i_rx_finish(rx_finish),
+  .o_irq    (irq      ),
   .i_frame_err  (frame_err),
   .i_rx_busy    (rx_busy  ),
-	.o_rx_finish  (rx_finish),
+	.o_rx_fifofull(rx_fifofull),
 	.o_tx		      (tx_data	),
-	.i_tx_start_clear(tx_start_clear), 
+	.i_tx_finish(tx_finish), 
   .i_tx_busy    (tx_busy  ),
 	.o_tx_start	  (tx_start )
   );

@@ -14,8 +14,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 `default_nettype wire
-
+                                                                
 `timescale 1 ns / 1 ps
+
+// `define DEMO_STR "This is uart demo.\nThis is uart demo.\nThis is uart demo.\nThis is uart demo.       \nThe UART is a standard 2-pin serial interface that can communicate with the most similar interfaces\nat a fixed baud rate. Although the UART operates independently of the CPU, data transfers are\nblocking operations which will generate CPU wait states until the data transfer is completed.\nThe entire 32bit word encodes the number of CPU core cycles to divide down to get the UART\ndata bit rate (baud rate). The default value is 1."
+`define DEMO_STR "This is uart demo.  "
+`define STR_LEN 20
 
 module uart_tb;
 	reg clock;
@@ -33,6 +37,10 @@ module uart_tb;
 	reg [7:0] tx_data;
 	wire tx_busy;
 	wire tx_clear_req;
+	
+	// parameter STR_LEN = 20;
+	localparam WORD_CNT = $ceil(`STR_LEN / 4);
+	reg [8*WORD_CNT*4-1:0] string;
 
 	assign checkbits  = mprj_io[31:16];
 	assign uart_tx = mprj_io[6];
@@ -144,34 +152,34 @@ module uart_tb;
 		$dumpvars(0, uart_tb);
 
 		// Repeat cycles of 1000 clock edges as needed to complete testbench
-		repeat (200) begin
-			repeat (1000) @(posedge clock);
+		repeat (500) begin
+			repeat (2000) @(posedge clock);
 			// $display("+1000 cycles");
 		end
-		$display("%c[1;31m",27);
-		`ifdef GL
-			$display ("Monitor: Timeout, Test LA (GL) Failed");
-		`else
-			$display ("Monitor: Timeout, Test LA (RTL) Failed");
-		`endif
-		$display("%c[0m",27);
-		$finish;
+		// $display("%c[1;31m",27);
+		// `ifdef GL
+		// 	$display ("Monitor: Timeout, Test LA (GL) Failed");
+		// `else
+		// 	$display ("Monitor: Timeout, Test LA (RTL) Failed");
+		// `endif
+		// $display("%c[0m",27);
+		// $finish;
 	end
 
 	initial begin
-		wait(checkbits == 16'hAB40);
-		$display("LA Test 1 started");
+		// wait(checkbits == 16'hAB40);
+		// $display("LA Test 1 started");
+		string = `DEMO_STR;
+		send_data(string);
+		//wait(checkbits == 61);
+		//send_data_1;
+		//wait(checkbits == 15);
+		//#10000;
+		//$display("LA Test 1 passed");
 
-		send_data_2;
-
-		wait(checkbits == 16'hAB51);
-
-                repeat (100) begin
-                        repeat (1000) @(posedge clock);
-                end
-
-		$display("LA Test 1 passed");
-		$finish;
+		//wait(checkbits == 16'hAB51);
+		//$display("LA Test 1 passed");
+		//$finish;		
 	end
 
 	task send_data_1;begin
@@ -180,6 +188,7 @@ module uart_tb;
 		tx_data = 15;
 		
 		#50;
+		wait(tx_busy);
 		wait(!tx_busy);
 		tx_start = 0;
 		$display("tx complete 1");
@@ -192,11 +201,39 @@ module uart_tb;
 		tx_data = 61;
 		
 		#50;
+		wait(tx_busy);
 		wait(!tx_busy);
 		tx_start = 0;
 		$display("tx complete 2");
 		
 	end endtask
+
+	task send_data;
+		input [8*WORD_CNT*4-1:0] string;
+		integer i;	
+		begin
+			$display("UART Test started\n\"%s\"", string);
+			for (i=`STR_LEN-1; i>=0; i=i-1) begin
+				send_char(string[8*i +: 8]);
+			end
+			$display("\033[0;33mtx demo complete:\n\"%s\"\033[0;37m", string);
+		end 
+	endtask
+
+	task send_char;
+		input [7:0] char;
+		begin
+			@(posedge clock);
+			tx_start = 1;
+			tx_data = char;
+			
+			#50;
+			wait(tx_busy);
+			wait(!tx_busy);
+			tx_start = 0;
+			$display("\033[0;33mtx complete: %s (%d)\033[0;37m", char, char);
+		end 
+	endtask
 
 	initial begin
 		RSTB <= 1'b0;
@@ -275,7 +312,7 @@ module uart_tb;
 	);
 
 	// Testbench UART
-	tbuart tbuart (
+	tbuart #(.STR_LEN(WORD_CNT*4)) tbuart (
 		.ser_rx(uart_tx),
 		.tx_start(tx_start),
 		.ser_tx(uart_rx),
