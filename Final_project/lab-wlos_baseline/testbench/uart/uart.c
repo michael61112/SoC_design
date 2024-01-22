@@ -5,7 +5,7 @@
 
 void __attribute__ ( ( section ( ".mprj" ) ) ) uart_write(int n)
 {
-    while(((reg_uart_stat>>3) & 1));
+    while(((reg_uart_stat>>6) & 1));
     reg_tx_data = n;
 }
 
@@ -42,7 +42,7 @@ char __attribute__ ( ( section ( ".mprj" ) ) ) uart_read_char()
 int __attribute__ ( ( section ( ".mprj" ) ) ) uart_read()
 {
     int num;
-    if((((reg_uart_stat>>5) | 0) == 0) && (((reg_uart_stat>>4) | 0) == 0)){
+    if((((reg_uart_stat>>5) | 0) == 0)/* && (((reg_uart_stat>>4) | 0) == 0)*/){
         for(int i = 0; i < 1; i++)
             asm volatile ("nop");
 
